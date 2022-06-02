@@ -1,4 +1,5 @@
-import {MovingCircle, Scene} from "./clash/objects.js"
+import {MovingCircle} from "./clash/objects.js"
+import {Scene} from "./clash/scene.js"
 import {Boot, preloadImagesOfCssFile} from "./lib/boot.js"
 import {HTML} from "./lib/dom.js"
 
@@ -27,7 +28,8 @@ const showProgress = (() => {
 
     const circleA = new MovingCircle(64, 256, 256)
     const circleB = new MovingCircle(64, 512, 256)
-    circleA.velocity.x = 1.0
+    circleA.velocity.x = 0.077
+    circleA.velocity.y = 0.01
 
     scene.movingObjects.push(circleA, circleB)
 
@@ -35,16 +37,19 @@ const showProgress = (() => {
     const canvas: HTMLCanvasElement = HTML.query('canvas')
     const context: CanvasRenderingContext2D = canvas.getContext('2d')
     const frame = () => {
+        scene.solve(16)
+
         canvas.width = canvas.clientWidth * devicePixelRatio
         canvas.height = canvas.clientHeight * devicePixelRatio
         context.save()
         context.scale(devicePixelRatio, devicePixelRatio)
         scene.wireframe(context)
 
-        scene.solve(1.0)
-
         context.restore()
 
+        if (scene.running) {
+            requestAnimationFrame(frame)
+        }
     }
     requestAnimationFrame(frame)
 
