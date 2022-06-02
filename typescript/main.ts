@@ -30,7 +30,7 @@ const showProgress = (() => {
     const corners = scene.frame(0.0, 0.0, 0.0, 0.0)
 
     const random = new Mulberry32()
-    for (const movingCircle of ArrayUtils.fill(100, () =>
+    for (const movingCircle of ArrayUtils.fill(50, () =>
         new MovingCircle(
             random.nextDouble(4.0, 32.0),
             random.nextDouble(64, 768),
@@ -47,9 +47,8 @@ const showProgress = (() => {
     const context: CanvasRenderingContext2D = canvas.getContext('2d')
     let lastTime = 0
     const nextFrame = (time) => {
-        const delta = time - lastTime
+        scene.solve(Math.min(20.0, time - lastTime)) // max 20ms steps
         lastTime = time
-        scene.solve(delta)
 
         const w = canvas.clientWidth
         const h = canvas.clientHeight

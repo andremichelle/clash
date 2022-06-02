@@ -1,36 +1,35 @@
+import {Contact} from "./contact.js"
 import {FixedGate} from "./objects.js"
-import {Touch} from "./touch.js"
 import {Vector} from "./vector.js"
 
-export interface ClashObject {
+export interface SceneObject {
     wireframe(context: CanvasRenderingContext2D): void
 }
 
-export interface FixedObject extends ClashObject {
+export interface FixedObject extends SceneObject {
 }
 
-export interface MovingObject extends ClashObject {
+export interface MovingObject extends SceneObject {
     readonly position: Vector
     readonly velocity: Vector
 
     move(time: number): void
 
-    predictTouch(scene: Scene): Touch | null
+    predictContact(scene: Scene): Contact
 
     repel(other: SceneObject): void
 }
 
-export type SceneObject = FixedObject | MovingObject
-
 export class Scene {
     readonly fixedObjects: FixedObject[] = []
     readonly movingObjects: MovingObject[] = []
-    readonly touchableObjects: SceneObject[] = []
+    readonly interactiveObjects: SceneObject[] = []
 
     running: boolean = true
 
     freeze(): void {
-        this.touchableObjects.splice(0, this.touchableObjects.length, ...this.fixedObjects, ...this.movingObjects)
+        // Call after every change to the scene
+        this.interactiveObjects.splice(0, this.interactiveObjects.length, ...this.fixedObjects, ...this.movingObjects)
     }
 
     frame(xMin: number, yMin: number, xMax: number, yMax: number): Vector[] {
@@ -48,22 +47,37 @@ export class Scene {
     }
 
     solve(remaining: number): void {
-        while(remaining > 0.0) {
-            const touch: Touch | null = this.movingObjects.reduce((prev: Touch | null, object: MovingObject) =>
-                Touch.closer(prev, object.predictTouch(this)), null)
-            if (touch !== null && touch.when < remaining) {
-                this.advance(touch.when)
-                touch.repel()
-                remaining -= touch.when
-            } else {
+        this.forces(remaining)
+        let steps = 0
+        while (remaining > 0.0) {
+            const contact: Contact = this.predictContact()
+            if (contact.when >= remaining) {
                 this.advance(remaining)
                 break
+            } else {
+                this.advance(contact.when)
+                contact.repel()
+                remaining -= contact.when
+            }
+            if (++steps > 10000) {
+                throw new Error('Solving took too long')
             }
         }
     }
 
+    predictContact(): Contact {
+        return this.movingObjects.reduce((nearest: Contact, object: MovingObject) =>
+            Contact.proximate(nearest, object.predictContact(this)), Contact.None)
+    }
+
     advance(time: number): void {
         this.movingObjects.forEach(moving => moving.move(time))
+    }
+
+    forces(time: number): void {
+        this.movingObjects.forEach(moving => {
+            moving.velocity.y += 0.0004 * time
+        })
     }
 
     wireframe(context: CanvasRenderingContext2D): void {

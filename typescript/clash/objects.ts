@@ -1,6 +1,6 @@
 import {TAU} from "../lib/math.js"
+import {Contact} from "./contact.js"
 import {FixedObject, MovingObject, Scene, SceneObject} from "./scene.js"
-import {Touch} from "./touch.js"
 import {Vector} from "./vector.js"
 
 export class FixedGate implements FixedObject {
@@ -39,10 +39,10 @@ export class MovingCircle implements MovingObject {
         this.predicted.clear()
     }
 
-    predictTouch(scene: Scene): Touch | null {
-        return scene.touchableObjects
-            .reduce<Touch>((prev: Touch | null, other: SceneObject) =>
-                this === other ? prev : Touch.closer(prev, this.predict(other)), null)
+    predictContact(scene: Scene): Contact {
+        return scene.interactiveObjects
+            .reduce<Contact>((nearest: Contact, other: SceneObject) =>
+                this === other ? nearest : Contact.proximate(nearest, this.predict(other)), Contact.None)
     }
 
     wireframe(context: CanvasRenderingContext2D): void {
@@ -50,9 +50,9 @@ export class MovingCircle implements MovingObject {
         context.arc(this.position.x, this.position.y, this.radius, 0.0, TAU)
     }
 
-    predict(other: SceneObject): Touch | null {
+    predict(other: SceneObject): Contact {
         if (other instanceof MovingCircle) {
-            return other.predicted.has(this) ? null : this.predictMovingCircle(other)
+            return other.predicted.has(this) ? Contact.None : this.predictMovingCircle(other)
         }
         if (other instanceof FixedGate) {
             return this.predictFixedGate(other)
@@ -60,36 +60,36 @@ export class MovingCircle implements MovingObject {
         throw new Error(`No strategy for predicting ${other.constructor.name}`)
     }
 
-    predictMovingCircle(other: MovingCircle): Touch | null {
+    predictMovingCircle(other: MovingCircle): Contact {
         this.predicted.add(other)
         const vx = other.velocity.x - this.velocity.x
         const vy = other.velocity.y - this.velocity.y
         const vs = vx * vx + vy * vy
-        if (vs == 0.0) return null
+        if (vs == 0.0) return Contact.None
         const ex = this.position.x - other.position.x
         const ey = this.position.y - other.position.y
         const ev = ex * vy - ey * vx
         const rr = this.radius + other.radius
         const sq = vs * rr * rr - ev * ev
-        if (sq < 0.0) return null
+        if (sq < 0.0) return Contact.None
         const when = -(Math.sqrt(sq) - ey * vy - ex * vx) / vs
-        return when > 0.0 ? new Touch(when, this, other) : null
+        return when > 0.0 ? new Contact(when, this, other) : Contact.None
     }
 
-    predictFixedGate(other: FixedGate): Touch | null {
+    predictFixedGate(other: FixedGate): Contact {
         const vx = this.velocity.x
         const vy = this.velocity.y
         const dx = other.p1.x - other.p0.x
         const dy = other.p1.y - other.p0.y
         const dd = Math.sqrt(dx * dx + dy * dy)
         const ud = vy * dx - vx * dy
-        if (ud <= 0) return null // only one collision direction
+        if (ud <= 0) return Contact.None // only one collision direction
         const px = this.position.x - other.p0.x - dy / dd * this.radius
         const py = this.position.y - other.p0.y + dx / dd * this.radius
         const ua = (vy * px - vx * py) / ud
-        if (ua < 0.0 || ua > 1.0) return null
+        if (ua < 0.0 || ua > 1.0) return Contact.None
         const when = (dy * px - dx * py) / ud
-        return when > 0.0 ? new Touch(when, this, other) : null
+        return when > 0.0 ? new Contact(when, this, other) : Contact.None
     }
 
     repel(other: SceneObject): void {
