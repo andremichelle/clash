@@ -11,7 +11,7 @@ export class Vector {
         this.y += other.y
     }
 
-    addPartly(other: Vector, scale: number): void {
+    addScaled(other: Vector, scale: number): void {
         this.x += other.x * scale
         this.y += other.y * scale
     }

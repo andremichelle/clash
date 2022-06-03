@@ -3,6 +3,9 @@ import {Contact} from "./contact.js"
 import {FixedObject, MovingObject, Scene, SceneObject} from "./scene.js"
 import {Vector} from "./vector.js"
 
+// https://martinheinz.dev/blog/15
+// https://gamedevelopment.tutsplus.com/tutorials/how-to-create-a-custom-2d-physics-engine-the-core-engine--gamedev-7493
+
 export class FixedGate implements FixedObject {
     constructor(readonly p0: Readonly<Vector>, readonly p1: Readonly<Vector>) {
     }
@@ -25,18 +28,28 @@ export class FixedGate implements FixedObject {
 }
 
 export class MovingCircle implements MovingObject {
+    static MIN_THRESHOLD = -.015625
+
     readonly position: Vector
     readonly velocity: Vector
+    readonly acceleration: Vector
+    readonly forces: Vector = new Vector(0.0, 0.0)
     readonly predicted: Set<MovingObject> = new Set<MovingObject>()
+    readonly inverseMass: number = this.mass === Number.POSITIVE_INFINITY ? 0.0 : 1.0 / this.mass
 
-    constructor(readonly radius: number, x: number = 0.0, y: number = 0.0) {
+    constructor(readonly mass: number, readonly radius: number, x: number = 0.0, y: number = 0.0) {
         this.position = new Vector(x, y)
         this.velocity = new Vector()
+        this.acceleration = new Vector()
     }
 
     move(time: number): void {
-        this.position.addPartly(this.velocity, time)
+        this.velocity.addScaled(this.forces, time * this.inverseMass)
+        this.position.addScaled(this.velocity, time)
         this.predicted.clear()
+    }
+
+    applyForces(time: number): void {
     }
 
     predictContact(scene: Scene): Contact {
@@ -73,7 +86,7 @@ export class MovingCircle implements MovingObject {
         const sq = vs * rr * rr - ev * ev
         if (sq < 0.0) return Contact.None
         const when = -(Math.sqrt(sq) - ey * vy - ex * vx) / vs
-        return when > 0.0 ? new Contact(when, this, other) : Contact.None
+        return this.toContact(when, other)
     }
 
     predictFixedGate(other: FixedGate): Contact {
@@ -84,12 +97,12 @@ export class MovingCircle implements MovingObject {
         const dd = Math.sqrt(dx * dx + dy * dy)
         const ud = vy * dx - vx * dy
         if (ud <= 0) return Contact.None // only one collision direction
-        const px = this.position.x - other.p0.x - dy / dd * this.radius
-        const py = this.position.y - other.p0.y + dx / dd * this.radius
+        const px = (this.position.x - other.p0.x) - dy / dd * this.radius
+        const py = (this.position.y - other.p0.y) + dx / dd * this.radius
         const ua = (vy * px - vx * py) / ud
         if (ua < 0.0 || ua > 1.0) return Contact.None
         const when = (dy * px - dx * py) / ud
-        return when > 0.0 ? new Contact(when, this, other) : Contact.None
+        return this.toContact(when, other)
     }
 
     repel(other: SceneObject): void {
@@ -104,13 +117,14 @@ export class MovingCircle implements MovingObject {
 
     repelMovingCircle(other: MovingCircle): void {
         const distance = this.radius + other.radius
-        const dx = (this.position.x - other.position.x) / distance
-        const dy = (this.position.y - other.position.y) / distance
-        const e = (other.velocity.x * dx + other.velocity.y * dy - this.velocity.x * dx - this.velocity.y * dy)
-        this.velocity.x += dx * e
-        this.velocity.y += dy * e
-        other.velocity.x -= dx * e
-        other.velocity.y -= dy * e
+        const nx = (this.position.x - other.position.x) / distance
+        const ny = (this.position.y - other.position.y) / distance
+
+        const k = -2.0 * ((other.velocity.x - this.velocity.x) * nx + (other.velocity.y - this.velocity.y) * ny) / (this.inverseMass + other.inverseMass)
+        this.velocity.x -= k * nx * this.inverseMass
+        this.velocity.y -= k * ny * this.inverseMass
+        other.velocity.x += k * nx * other.inverseMass
+        other.velocity.y += k * ny * other.inverseMass
     }
 
     repelFixedGate(other: FixedGate): void {
@@ -122,5 +136,9 @@ export class MovingCircle implements MovingObject {
         const e = 2.0 * (nx * this.velocity.x + ny * this.velocity.y)
         this.velocity.x -= nx * e
         this.velocity.y -= ny * e
+    }
+
+    toContact(when: number, other: SceneObject) {
+        return when > MovingCircle.MIN_THRESHOLD ? new Contact(when, this, other) : Contact.None
     }
 }

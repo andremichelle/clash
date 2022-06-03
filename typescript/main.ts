@@ -30,15 +30,21 @@ const showProgress = (() => {
     const corners = scene.frame(0.0, 0.0, 0.0, 0.0)
 
     const random = new Mulberry32()
-    for (const movingCircle of ArrayUtils.fill(50, () =>
-        new MovingCircle(
-            random.nextDouble(4.0, 32.0),
-            random.nextDouble(64, 768),
-            random.nextDouble(64, 768)))) {
+    const movingCircles = ArrayUtils.fill(25, () => {
+        const radius = random.nextDouble(4.0, 64.0)
+        return new MovingCircle(
+            radius * radius,
+            radius,
+            random.nextDouble(64, 400),
+            random.nextDouble(64, 400))
+    })
+    for (const movingCircle of movingCircles) {
         movingCircle.velocity.x = random.nextDouble(-0.5, 0.5)
         movingCircle.velocity.y = random.nextDouble(-0.5, 0.5)
         scene.movingObjects.push(movingCircle)
     }
+
+    scene.movingObjects.push(new MovingCircle(Number.POSITIVE_INFINITY, 32, 400, 300))
 
     scene.freeze()
 
@@ -54,8 +60,8 @@ const showProgress = (() => {
         const h = canvas.clientHeight
         corners[1].x = w
         corners[2].x = w
-        corners[2].y = h
-        corners[3].y = h
+        corners[2].y = h / 2
+        corners[3].y = h / 2
         canvas.width = w * devicePixelRatio
         canvas.height = h * devicePixelRatio
         context.save()

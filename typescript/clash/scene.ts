@@ -15,6 +15,8 @@ export interface MovingObject extends SceneObject {
 
     move(time: number): void
 
+    applyForces(time: number): void
+
     predictContact(scene: Scene): Contact
 
     repel(other: SceneObject): void
@@ -49,7 +51,7 @@ export class Scene {
     solve(remaining: number): void {
         this.forces(remaining)
         let steps = 0
-        while (remaining > 0.0) {
+        while (remaining > 1e-3) {
             const contact: Contact = this.predictContact()
             if (contact.when >= remaining) {
                 this.advance(remaining)
@@ -75,9 +77,7 @@ export class Scene {
     }
 
     forces(time: number): void {
-        this.movingObjects.forEach(moving => {
-            moving.velocity.y += 0.0004 * time
-        })
+        this.movingObjects.forEach(moving => moving.applyForces(time))
     }
 
     wireframe(context: CanvasRenderingContext2D): void {
