@@ -1,7 +1,8 @@
-import {MovingObject, SceneObject} from "./scene.js"
+import {MovingObject} from "./objects.js"
+import {SceneObject} from "./scene.js"
 
 export class Contact {
-    static None = new Contact(Number.MAX_VALUE, null, null)
+    static None = new Contact(Number.POSITIVE_INFINITY, null, null)
 
     static proximate(current: Contact, other: Contact): Contact {
         return other === Contact.None

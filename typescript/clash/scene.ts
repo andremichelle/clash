@@ -1,5 +1,5 @@
 import {Contact} from "./contact.js"
-import {FixedGate} from "./objects.js"
+import {FixedGate, MovingObject} from "./objects.js"
 import {Vector} from "./vector.js"
 
 export interface SceneObject {
@@ -7,19 +7,6 @@ export interface SceneObject {
 }
 
 export interface FixedObject extends SceneObject {
-}
-
-export interface MovingObject extends SceneObject {
-    readonly position: Vector
-    readonly velocity: Vector
-
-    move(time: number): void
-
-    applyForces(time: number): void
-
-    predictContact(scene: Scene): Contact
-
-    repel(other: SceneObject): void
 }
 
 export class Scene {

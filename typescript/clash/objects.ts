@@ -1,6 +1,7 @@
 import {TAU} from "../lib/math.js"
 import {Contact} from "./contact.js"
-import {FixedObject, MovingObject, Scene, SceneObject} from "./scene.js"
+import {FixedObject, Scene, SceneObject} from "./scene.js"
+import {Circle, Shape} from "./shapes.js"
 import {Vector} from "./vector.js"
 
 // https://martinheinz.dev/blog/15
@@ -27,15 +28,16 @@ export class FixedGate implements FixedObject {
     }
 }
 
-export class MovingCircle implements MovingObject {
+export class MovingObject {
     static MIN_THRESHOLD = -.015625
 
-    readonly position: Vector
+    readonly position: Vector // center of mass
     readonly velocity: Vector
     readonly acceleration: Vector
     readonly forces: Vector = new Vector(0.0, 0.0)
     readonly predicted: Set<MovingObject> = new Set<MovingObject>()
     readonly inverseMass: number = this.mass === Number.POSITIVE_INFINITY ? 0.0 : 1.0 / this.mass
+    readonly shape: Shape = new Circle(this)
 
     constructor(readonly mass: number, readonly radius: number, x: number = 0.0, y: number = 0.0) {
         this.position = new Vector(x, y)
@@ -64,49 +66,17 @@ export class MovingCircle implements MovingObject {
     }
 
     predict(other: SceneObject): Contact {
-        if (other instanceof MovingCircle) {
-            return other.predicted.has(this) ? Contact.None : this.predictMovingCircle(other)
+        if (other instanceof MovingObject) {
+            if (other.predicted.has(this)) {
+                return Contact.None
+            }
+            this.predicted.add(other)
         }
-        if (other instanceof FixedGate) {
-            return this.predictFixedGate(other)
-        }
-        throw new Error(`No strategy for predicting ${other.constructor.name}`)
-    }
-
-    predictMovingCircle(other: MovingCircle): Contact {
-        this.predicted.add(other)
-        const vx = other.velocity.x - this.velocity.x
-        const vy = other.velocity.y - this.velocity.y
-        const vs = vx * vx + vy * vy
-        if (vs == 0.0) return Contact.None
-        const ex = this.position.x - other.position.x
-        const ey = this.position.y - other.position.y
-        const ev = ex * vy - ey * vx
-        const rr = this.radius + other.radius
-        const sq = vs * rr * rr - ev * ev
-        if (sq < 0.0) return Contact.None
-        const when = -(Math.sqrt(sq) - ey * vy - ex * vx) / vs
-        return this.toContact(when, other)
-    }
-
-    predictFixedGate(other: FixedGate): Contact {
-        const vx = this.velocity.x
-        const vy = this.velocity.y
-        const dx = other.p1.x - other.p0.x
-        const dy = other.p1.y - other.p0.y
-        const dd = Math.sqrt(dx * dx + dy * dy)
-        const ud = vy * dx - vx * dy
-        if (ud <= 0) return Contact.None // only one collision direction
-        const px = (this.position.x - other.p0.x) - dy / dd * this.radius
-        const py = (this.position.y - other.p0.y) + dx / dd * this.radius
-        const ua = (vy * px - vx * py) / ud
-        if (ua < 0.0 || ua > 1.0) return Contact.None
-        const when = (dy * px - dx * py) / ud
-        return this.toContact(when, other)
+        return this.shape.predict(other)
     }
 
     repel(other: SceneObject): void {
-        if (other instanceof MovingCircle) {
+        if (other instanceof MovingObject) {
             this.repelMovingCircle(other)
         } else if (other instanceof FixedGate) {
             this.repelFixedGate(other)
@@ -115,16 +85,15 @@ export class MovingCircle implements MovingObject {
         }
     }
 
-    repelMovingCircle(other: MovingCircle): void {
+    repelMovingCircle(other: MovingObject): void {
         const distance = this.radius + other.radius
         const nx = (this.position.x - other.position.x) / distance
         const ny = (this.position.y - other.position.y) / distance
-
-        const k = -2.0 * ((other.velocity.x - this.velocity.x) * nx + (other.velocity.y - this.velocity.y) * ny) / (this.inverseMass + other.inverseMass)
-        this.velocity.x -= k * nx * this.inverseMass
-        this.velocity.y -= k * ny * this.inverseMass
-        other.velocity.x += k * nx * other.inverseMass
-        other.velocity.y += k * ny * other.inverseMass
+        const e = -2.0 * ((other.velocity.x - this.velocity.x) * nx + (other.velocity.y - this.velocity.y) * ny) / (this.inverseMass + other.inverseMass)
+        this.velocity.x -= e * nx * this.inverseMass
+        this.velocity.y -= e * ny * this.inverseMass
+        other.velocity.x += e * nx * other.inverseMass
+        other.velocity.y += e * ny * other.inverseMass
     }
 
     repelFixedGate(other: FixedGate): void {
@@ -139,6 +108,6 @@ export class MovingCircle implements MovingObject {
     }
 
     toContact(when: number, other: SceneObject) {
-        return when > MovingCircle.MIN_THRESHOLD ? new Contact(when, this, other) : Contact.None
+        return when > MovingObject.MIN_THRESHOLD ? new Contact(when, this, other) : Contact.None
     }
 }

@@ -1,4 +1,4 @@
-import {MovingCircle} from "./clash/objects.js"
+import {MovingObject} from "./clash/objects.js"
 import {Scene} from "./clash/scene.js"
 import {Boot, preloadImagesOfCssFile} from "./lib/boot.js"
 import {ArrayUtils} from "./lib/common.js"
@@ -30,21 +30,21 @@ const showProgress = (() => {
     const corners = scene.frame(0.0, 0.0, 0.0, 0.0)
 
     const random = new Mulberry32()
-    const movingCircles = ArrayUtils.fill(25, () => {
+    const movingObjects = ArrayUtils.fill(25, () => {
         const radius = random.nextDouble(4.0, 64.0)
-        return new MovingCircle(
+        return new MovingObject(
             radius * radius,
             radius,
             random.nextDouble(64, 400),
             random.nextDouble(64, 400))
     })
-    for (const movingCircle of movingCircles) {
-        movingCircle.velocity.x = random.nextDouble(-0.5, 0.5)
-        movingCircle.velocity.y = random.nextDouble(-0.5, 0.5)
-        scene.movingObjects.push(movingCircle)
+    for (const object of movingObjects) {
+        object.velocity.x = random.nextDouble(-0.5, 0.5)
+        object.velocity.y = random.nextDouble(-0.5, 0.5)
+        scene.movingObjects.push(object)
     }
 
-    scene.movingObjects.push(new MovingCircle(Number.POSITIVE_INFINITY, 32, 400, 300))
+    scene.movingObjects.push(new MovingObject(Number.POSITIVE_INFINITY, 32, 400, 300))
 
     scene.freeze()
 
