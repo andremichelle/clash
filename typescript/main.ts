@@ -1,9 +1,16 @@
 import {MovingObject} from "./clash/objects.js"
 import {Scene} from "./clash/scene.js"
+import {Circle} from "./clash/shapes.js"
 import {Boot, preloadImagesOfCssFile} from "./lib/boot.js"
 import {ArrayUtils} from "./lib/common.js"
 import {HTML} from "./lib/dom.js"
 import {Mulberry32} from "./lib/math.js"
+
+// https://martinheinz.dev/blog/15
+// https://gamedevelopment.tutsplus.com/tutorials/how-to-create-a-custom-2d-physics-engine-the-core-engine--gamedev-7493
+
+// TODO
+// Try constrain repelling to single axis
 
 const showProgress = (() => {
     const progress: SVGSVGElement = document.querySelector("svg.preloader")
@@ -30,11 +37,10 @@ const showProgress = (() => {
     const corners = scene.frame(0.0, 0.0, 0.0, 0.0)
 
     const random = new Mulberry32()
-    const movingObjects = ArrayUtils.fill(25, () => {
+    const movingObjects = ArrayUtils.fill(50, () => {
         const radius = random.nextDouble(4.0, 64.0)
-        return new MovingObject(
-            radius * radius,
-            radius,
+        return new MovingObject<Circle>(
+            new Circle(radius * radius, radius),
             random.nextDouble(64, 400),
             random.nextDouble(64, 400))
     })
@@ -44,17 +50,18 @@ const showProgress = (() => {
         scene.movingObjects.push(object)
     }
 
-    scene.movingObjects.push(new MovingObject(Number.POSITIVE_INFINITY, 32, 400, 300))
+    scene.movingObjects.push(new MovingObject(new Circle(Number.POSITIVE_INFINITY, 32), 400, 300))
 
-    scene.freeze()
+    scene.compile()
 
     // --- BOOT ENDS ---
     const canvas: HTMLCanvasElement = HTML.query('canvas')
     const context: CanvasRenderingContext2D = canvas.getContext('2d')
     let lastTime = 0
     const nextFrame = (time) => {
-        scene.solve(Math.min(20.0, time - lastTime)) // max 20ms steps
+        // scene.solve(Math.min(20.0, time - lastTime)) // max 20ms steps
         lastTime = time
+        scene.solve(16)
 
         const w = canvas.clientWidth
         const h = canvas.clientHeight
