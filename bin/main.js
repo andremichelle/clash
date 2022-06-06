@@ -7,8 +7,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { Scene } from "./clash/scene.js";
 import { FixedPoint, MovingCircle } from "./clash/objects.js";
+import { Scene } from "./clash/scene.js";
 import { Vector } from "./clash/vector.js";
 import { Boot, preloadImagesOfCssFile } from "./lib/boot.js";
 import { ArrayUtils } from "./lib/common.js";
@@ -31,7 +31,7 @@ const showProgress = (() => {
     const random = new Mulberry32();
     const movingObjects = ArrayUtils.fill(5, () => {
         const radius = random.nextDouble(4.0, 64.0);
-        return new MovingCircle(radius * radius, random.nextDouble(64, 400), random.nextDouble(64, 400), radius);
+        return new MovingCircle(radius * radius, random.nextDouble(64, 512), random.nextDouble(64, 512), radius);
     });
     for (const object of movingObjects) {
         object.velocity.x = random.nextDouble(-0.5, 0.5);
@@ -42,11 +42,13 @@ const showProgress = (() => {
     scene.add(new FixedPoint(new Vector(600, 300)));
     scene.compile();
     const canvas = HTML.query('canvas');
+    const labelTotalEnergy = HTML.query('#total-energy');
     const context = canvas.getContext('2d');
     let lastTime = 0;
     const nextFrame = (time) => {
         lastTime = time;
         scene.solve(16);
+        labelTotalEnergy.textContent = scene.totalEnergy().toFixed(5);
         const w = canvas.clientWidth;
         const h = canvas.clientHeight;
         corners[1].x = w;

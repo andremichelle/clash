@@ -1,5 +1,5 @@
-import {Scene} from "./clash/scene.js"
 import {FixedPoint, MovingCircle} from "./clash/objects.js"
+import {Scene} from "./clash/scene.js"
 import {Vector} from "./clash/vector.js"
 import {Boot, preloadImagesOfCssFile} from "./lib/boot.js"
 import {ArrayUtils} from "./lib/common.js"
@@ -41,8 +41,8 @@ const showProgress = (() => {
         const radius = random.nextDouble(4.0, 64.0)
         return new MovingCircle(
             radius * radius,
-            random.nextDouble(64, 400),
-            random.nextDouble(64, 400),
+            random.nextDouble(64, 512),
+            random.nextDouble(64, 512),
             radius)
     })
     for (const object of movingObjects) {
@@ -56,12 +56,14 @@ const showProgress = (() => {
 
     // --- BOOT ENDS ---
     const canvas: HTMLCanvasElement = HTML.query('canvas')
+    const labelTotalEnergy: HTMLCanvasElement = HTML.query('#total-energy')
     const context: CanvasRenderingContext2D = canvas.getContext('2d')
     let lastTime = 0
     const nextFrame = (time) => {
         // scene.solve(Math.min(20.0, time - lastTime)) // max 20ms steps
         lastTime = time
         scene.solve(16)
+        labelTotalEnergy.textContent = scene.totalEnergy().toFixed(5)
 
         const w = canvas.clientWidth
         const h = canvas.clientHeight

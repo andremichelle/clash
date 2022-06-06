@@ -95,4 +95,8 @@ export class Scene {
         context.strokeStyle = 'grey'
         context.stroke()
     }
+
+    totalEnergy(): number {
+        return this.movingObjects.reduce((energy: number, object: MovingObject) => energy + object.velocity.length(), 0.0)
+    }
 }

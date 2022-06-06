@@ -82,5 +82,8 @@ export class Scene {
         context.strokeStyle = 'grey';
         context.stroke();
     }
+    totalEnergy() {
+        return this.movingObjects.reduce((energy, object) => energy + object.velocity.length(), 0.0);
+    }
 }
 //# sourceMappingURL=scene.js.map
