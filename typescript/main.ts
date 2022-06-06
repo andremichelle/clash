@@ -1,6 +1,5 @@
-import {MovingObject} from "./clash/objects.js"
 import {Scene} from "./clash/scene.js"
-import {Circle} from "./clash/shapes.js"
+import {MovingCircle} from "./clash/shapes.js"
 import {Boot, preloadImagesOfCssFile} from "./lib/boot.js"
 import {ArrayUtils} from "./lib/common.js"
 import {HTML} from "./lib/dom.js"
@@ -39,19 +38,18 @@ const showProgress = (() => {
     const random = new Mulberry32()
     const movingObjects = ArrayUtils.fill(50, () => {
         const radius = random.nextDouble(4.0, 64.0)
-        return new MovingObject<Circle>(
-            new Circle(radius * radius, radius),
+        return new MovingCircle(
+            radius * radius,
             random.nextDouble(64, 400),
-            random.nextDouble(64, 400))
+            random.nextDouble(64, 400),
+            radius)
     })
     for (const object of movingObjects) {
         object.velocity.x = random.nextDouble(-0.5, 0.5)
         object.velocity.y = random.nextDouble(-0.5, 0.5)
-        scene.movingObjects.push(object)
+        scene.add(object)
     }
-
-    scene.movingObjects.push(new MovingObject(new Circle(Number.POSITIVE_INFINITY, 32), 400, 300))
-
+    scene.add(new MovingCircle(Number.POSITIVE_INFINITY, 400, 300, 32))
     scene.compile()
 
     // --- BOOT ENDS ---
@@ -67,8 +65,8 @@ const showProgress = (() => {
         const h = canvas.clientHeight
         corners[1].x = w
         corners[2].x = w
-        corners[2].y = h / 2
-        corners[3].y = h / 2
+        corners[2].y = h
+        corners[3].y = h
         canvas.width = w * devicePixelRatio
         canvas.height = h * devicePixelRatio
         context.save()

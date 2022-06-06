@@ -6,7 +6,7 @@ export class Contact {
 
     static None = new Contact(Number.POSITIVE_INFINITY, null, null)
 
-    static threshold(when: number, object: MovingObject<any>, other: SceneObject) {
+    static threshold(when: number, object: MovingObject, other: SceneObject) {
         return when > Contact.MIN_TIME_THRESHOLD ? new Contact(when, object, other) : Contact.None
     }
 
@@ -18,11 +18,12 @@ export class Contact {
     }
 
     constructor(readonly when: number,
-                readonly moving: MovingObject<any>,
+                readonly moving: MovingObject,
                 readonly other: SceneObject) {
     }
 
     repel(): void {
+        this!.moving.touched = true
         this!.moving.repel(this!.other)
     }
 }

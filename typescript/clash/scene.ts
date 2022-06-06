@@ -8,20 +8,13 @@ export interface SceneObject {
 }
 
 export class Scene {
-    readonly fixedObjects: SceneObject[] = []
-    readonly movingObjects: MovingObject<any>[] = []
-    readonly testPairs: [MovingObject<any>, SceneObject][] = []
+    private readonly fixedObjects: SceneObject[] = []
+    private readonly movingObjects: MovingObject[] = []
+    private readonly testPairs: [MovingObject, SceneObject][] = []
+
+    private needsCompile: boolean = false
 
     running: boolean = true
-
-    compile(): void {
-        // Call after every change to the scene
-        this.testPairs.splice(0, this.testPairs.length, ...this.movingObjects
-            .reduce((pairs: [MovingObject<any>, SceneObject][], movingObject: MovingObject<any>, index: number, movingObjects: MovingObject<any>[]) => pairs
-                .concat(movingObjects.slice(index + 1).map(other => [movingObject, other as SceneObject])), this.movingObjects
-                .reduce((pairs: [MovingObject<any>, SceneObject][], movingObject: MovingObject<any>) => pairs
-                    .concat(this.fixedObjects.map(other => [movingObject, other])), [])))
-    }
 
     frame(xMin: number, yMin: number, xMax: number, yMax: number): Vector[] {
         const corners: Vector[] = [
@@ -30,14 +23,27 @@ export class Scene {
             new Vector(xMax, yMax),
             new Vector(xMin, yMax)
         ]
-        this.fixedObjects.push(new FixedGate(corners[1], corners[0]))
-        this.fixedObjects.push(new FixedGate(corners[2], corners[1]))
-        this.fixedObjects.push(new FixedGate(corners[3], corners[2]))
-        this.fixedObjects.push(new FixedGate(corners[0], corners[3]))
+        this.add(new FixedGate(corners[1], corners[0]))
+        this.add(new FixedGate(corners[2], corners[1]))
+        this.add(new FixedGate(corners[3], corners[2]))
+        this.add(new FixedGate(corners[0], corners[3]))
         return corners
     }
 
+    add(object: MovingObject | SceneObject): void {
+        if (object instanceof MovingObject) {
+            this.movingObjects.push(object)
+        } else {
+            this.fixedObjects.push(object)
+        }
+        this.needsCompile = true
+    }
+
     solve(remaining: number): void {
+        if (this.needsCompile) {
+            this.compile()
+            this.needsCompile = false
+        }
         this.forces(remaining)
         let steps = 0
         while (remaining > 1e-3) {
@@ -56,8 +62,17 @@ export class Scene {
         }
     }
 
+    compile(): void {
+        // Call after every change to the scene
+        this.testPairs.splice(0, this.testPairs.length, ...this.movingObjects
+            .reduce((pairs: [MovingObject, SceneObject][], movingObject: MovingObject, index: number, movingObjects: MovingObject[]) => pairs
+                .concat(movingObjects.slice(index + 1).map(other => [movingObject, other as SceneObject])), this.movingObjects
+                .reduce((pairs: [MovingObject, SceneObject][], movingObject: MovingObject) => pairs
+                    .concat(this.fixedObjects.map(other => [movingObject, other])), [])))
+    }
+
     predictContact(): Contact {
-        return this.testPairs.reduce((nearest: Contact, pair: [MovingObject<any>, SceneObject]) =>
+        return this.testPairs.reduce((nearest: Contact, pair: [MovingObject, SceneObject]) =>
             Contact.proximate(nearest, pair[0].predict(pair[1])), Contact.None)
     }
 
@@ -72,8 +87,11 @@ export class Scene {
     wireframe(context: CanvasRenderingContext2D): void {
         context.beginPath()
         this.movingObjects.forEach(object => object.wireframe(context))
+        context.lineWidth = 2.0
         context.strokeStyle = 'orange'
+        context.fillStyle = 'black'
         context.stroke()
+        context.fill()
         context.beginPath()
         this.fixedObjects.forEach(object => object.wireframe(context))
         context.strokeStyle = 'grey'
