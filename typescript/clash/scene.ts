@@ -88,7 +88,8 @@ export class Scene {
     wireframe(context: CanvasRenderingContext2D): void {
         context.beginPath()
         this.movingObjects.forEach(object => object.wireframe(context))
-        context.strokeStyle = 'orange'
+        context.lineWidth = 2.0
+        context.strokeStyle = 'rgb(255, 200, 60)'
         context.fillStyle = 'black'
         context.stroke()
         context.fill()
@@ -98,5 +99,12 @@ export class Scene {
         context.stroke()
     }
 
-    totalEnergy = (): number => this.movingObjects.reduce((energy: number, object: MovingObject) => energy + object.velocity.dot() * object.mass, 0.0) * 0.5
+    numTests = (): number => this.testPairs.length
+
+    numObjects = (): number => this.movingObjects.length + this.fixedObjects.length
+
+    totalEnergy = (): number => this.movingObjects.reduce((energy: number, object: MovingObject) => {
+        const squared = object.velocity.dot()
+        return squared === 0.0 ? energy : energy + squared * object.mass
+    }, 0.0) * 0.5
 }

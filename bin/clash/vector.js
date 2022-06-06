@@ -24,6 +24,9 @@ export class Vector {
         console.assert(length !== 0.0);
         return new Vector(this.y / length, -this.x / length);
     }
+    dot() {
+        return this.x * this.x + this.y * this.y;
+    }
     length() {
         return Math.sqrt(this.x * this.x + this.y * this.y);
     }

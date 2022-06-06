@@ -7,5 +7,6 @@ export declare class Vector {
     addScaled(other: Vector, scale: number): void;
     normalize(): Vector;
     normal(): Vector;
+    dot(): number;
     length(): number;
 }

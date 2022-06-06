@@ -257,6 +257,11 @@ main p {
   margin: 0;
   padding: 0;
   position: absolute;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+main p > span {
+  white-space: nowrap;
 }
 
 /*# sourceMappingURL=main.css.map */

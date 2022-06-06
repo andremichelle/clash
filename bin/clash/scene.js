@@ -8,7 +8,12 @@ export class Scene {
         this.testPairs = [];
         this.needsCompile = false;
         this.running = true;
-        this.totalEnergy = () => this.movingObjects.reduce((energy, object) => energy + object.velocity.dot() * object.mass, 0.0) * 0.5;
+        this.numTests = () => this.testPairs.length;
+        this.numObjects = () => this.movingObjects.length + this.fixedObjects.length;
+        this.totalEnergy = () => this.movingObjects.reduce((energy, object) => {
+            const squared = object.velocity.dot();
+            return squared === 0.0 ? energy : energy + squared * object.mass;
+        }, 0.0) * 0.5;
     }
     frame(xMin, yMin, xMax, yMax) {
         const corners = [
@@ -77,7 +82,8 @@ export class Scene {
     wireframe(context) {
         context.beginPath();
         this.movingObjects.forEach(object => object.wireframe(context));
-        context.strokeStyle = 'orange';
+        context.lineWidth = 2.0;
+        context.strokeStyle = 'rgb(255, 200, 60)';
         context.fillStyle = 'black';
         context.stroke();
         context.fill();

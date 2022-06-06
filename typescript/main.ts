@@ -1,5 +1,6 @@
-import {MovingCircle} from "./clash/objects.js"
+import {FixedPoint, MovingCircle} from "./clash/objects.js"
 import {Scene} from "./clash/scene.js"
+import {Vector} from "./clash/vector.js"
 import {Boot, preloadImagesOfCssFile} from "./lib/boot.js"
 import {HTML} from "./lib/dom.js"
 import {Mulberry32} from "./lib/math.js"
@@ -36,43 +37,39 @@ const showProgress = (() => {
 
     const random = new Mulberry32()
 
-    for (let i = 0; i < 10; i++) {
-        const radius = random.nextDouble(4.0, 64.0)
-        const object = new MovingCircle(
-            radius * radius,
-            random.nextDouble(64, 512),
-            random.nextDouble(64, 512),
-            radius)
-        object.velocity.x = random.nextDouble(-0.5, 0.5)
-        object.velocity.y = random.nextDouble(-0.5, 0.5)
+    for (let i = 0; i < 100; i++) {
+        const radius = random.nextDouble(4.0, 32.0)
+        const mass = radius * radius
+        const x = random.nextDouble(radius, window.innerWidth - radius)
+        const y = random.nextDouble(radius, window.innerHeight - radius)
+        const object = new MovingCircle(mass, x, y, radius)
+        object.velocity.x = random.nextDouble(-0.25, 0.25)
+        object.velocity.y = random.nextDouble(-0.25, 0.25)
         scene.add(object)
     }
 
-    // scene.add(new MovingCircle(Number.POSITIVE_INFINITY, 400, 300, 32))
-    // scene.add(new FixedPoint(new Vector(600, 300)))
+    scene.add(new MovingCircle(Number.POSITIVE_INFINITY, 400, 300, 32))
+    scene.add(new FixedPoint(new Vector(600, 300)))
     scene.compile()
 
-    // setInterval(() => {
-    //     scene.add(new MovingCircle(10.0, random.nextInt(0.0, 600), 0, 10))
-    // }, 1000)
-    //
     // --- BOOT ENDS ---
     const canvas: HTMLCanvasElement = HTML.query('canvas')
     const labelTotalEnergy: HTMLCanvasElement = HTML.query('#total-energy')
+    const labelNumTests: HTMLCanvasElement = HTML.query('#num-tests')
+    const labelNumObject: HTMLCanvasElement = HTML.query('#num-objects')
     const context: CanvasRenderingContext2D = canvas.getContext('2d')
-    let lastTime = 0
-    const nextFrame = (time) => {
-        // scene.solve(Math.min(20.0, time - lastTime)) // max 20ms steps
-        lastTime = time
-        scene.solve(16)
+    const nextFrame = () => {
+        scene.solve(1000.0 / 60.0) // assume steady 60fps
         labelTotalEnergy.textContent = scene.totalEnergy().toFixed(12)
+        labelNumTests.textContent = `${scene.numTests()}`
+        labelNumObject.textContent = `${scene.numObjects()}`
 
         const w = canvas.clientWidth
         const h = canvas.clientHeight
         corners[1].x = w
         corners[2].x = w
-        corners[2].y = h / 2
-        corners[3].y = h / 2
+        corners[2].y = h
+        corners[3].y = h
         canvas.width = w * devicePixelRatio
         canvas.height = h * devicePixelRatio
         context.save()

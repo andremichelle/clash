@@ -18,5 +18,7 @@ export declare class Scene {
     advance(time: number): void;
     forces(time: number): void;
     wireframe(context: CanvasRenderingContext2D): void;
+    numTests: () => number;
+    numObjects: () => number;
     totalEnergy: () => number;
 }
