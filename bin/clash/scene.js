@@ -8,6 +8,7 @@ export class Scene {
         this.testPairs = [];
         this.needsCompile = false;
         this.running = true;
+        this.totalEnergy = () => this.movingObjects.reduce((energy, object) => energy + object.velocity.dot() * object.mass, 0.0) * 0.5;
     }
     frame(xMin, yMin, xMax, yMax) {
         const corners = [
@@ -22,12 +23,14 @@ export class Scene {
         this.add(new FixedGate(corners[0], corners[3]));
         return corners;
     }
-    add(object) {
-        if (object instanceof MovingObject) {
-            this.movingObjects.push(object);
-        }
-        else {
-            this.fixedObjects.push(object);
+    add(...objects) {
+        for (const object of objects) {
+            if (object instanceof MovingObject) {
+                this.movingObjects.push(object);
+            }
+            else {
+                this.fixedObjects.push(object);
+            }
         }
         this.needsCompile = true;
     }
@@ -50,6 +53,7 @@ export class Scene {
                 remaining -= contact.when;
             }
             if (++steps > 10000) {
+                console.log(steps, contact);
                 throw new Error('Solving took too long');
             }
         }
@@ -81,9 +85,6 @@ export class Scene {
         this.fixedObjects.forEach(object => object.wireframe(context));
         context.strokeStyle = 'grey';
         context.stroke();
-    }
-    totalEnergy() {
-        return this.movingObjects.reduce((energy, object) => energy + object.velocity.length(), 0.0);
     }
 }
 //# sourceMappingURL=scene.js.map

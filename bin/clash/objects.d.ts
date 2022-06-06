@@ -7,7 +7,6 @@ export declare abstract class MovingObject {
     readonly position: Vector;
     readonly velocity: Vector;
     readonly acceleration: Vector;
-    readonly forces: Vector;
     protected constructor(mass: number, x?: number, y?: number);
     move(time: number): void;
     applyForces(time: number): void;

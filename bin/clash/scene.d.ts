@@ -11,12 +11,12 @@ export declare class Scene {
     private needsCompile;
     running: boolean;
     frame(xMin: number, yMin: number, xMax: number, yMax: number): Vector[];
-    add(object: MovingObject | SceneObject): void;
+    add(...objects: (MovingObject | SceneObject)[]): void;
     solve(remaining: number): void;
     compile(): void;
     predictContact(): Contact;
     advance(time: number): void;
     forces(time: number): void;
     wireframe(context: CanvasRenderingContext2D): void;
-    totalEnergy(): number;
+    totalEnergy: () => number;
 }

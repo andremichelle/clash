@@ -5,13 +5,12 @@ export class MovingObject {
     constructor(mass, x = 0.0, y = 0.0) {
         this.mass = mass;
         this.inverseMass = this.mass === Number.POSITIVE_INFINITY ? 0.0 : 1.0 / this.mass;
-        this.forces = new Vector(0.0, 0.0);
         this.position = new Vector(x, y);
-        this.velocity = new Vector();
-        this.acceleration = new Vector();
+        this.velocity = new Vector(0.0, 0.0);
+        this.acceleration = new Vector(0.0, 0.0);
     }
     move(time) {
-        this.velocity.addScaled(this.forces, time * this.inverseMass);
+        this.velocity.addScaled(this.acceleration, time * this.inverseMass);
         this.position.addScaled(this.velocity, time);
     }
     applyForces(time) {
@@ -27,12 +26,10 @@ export class MovingCircle extends MovingObject {
         context.arc(this.position.x, this.position.y, this.radius, 0.0, TAU);
     }
     predict(other) {
-        if (other instanceof MovingObject) {
-            if (other instanceof MovingCircle) {
-                return this.predictMovingCircle(other);
-            }
+        if (other instanceof MovingCircle) {
+            return this.predictMovingCircle(other);
         }
-        if (other instanceof FixedPoint) {
+        else if (other instanceof FixedPoint) {
             return this.predictFixedPoint(other);
         }
         else if (other instanceof FixedGate) {
@@ -102,11 +99,13 @@ export class MovingCircle extends MovingObject {
         const distance = this.radius + other.radius;
         const nx = (this.position.x - other.position.x) / distance;
         const ny = (this.position.y - other.position.y) / distance;
-        const e = -2.0 * ((other.velocity.x - this.velocity.x) * nx + (other.velocity.y - this.velocity.y) * ny) / (this.inverseMass + other.inverseMass);
-        this.velocity.x -= e * nx * this.inverseMass;
-        this.velocity.y -= e * ny * this.inverseMass;
-        other.velocity.x += e * nx * other.inverseMass;
-        other.velocity.y += e * ny * other.inverseMass;
+        const e = 2.0 * ((this.velocity.x - other.velocity.x) * nx + (this.velocity.y - other.velocity.y) * ny) / (this.inverseMass + other.inverseMass);
+        const ex = nx * e;
+        const ey = ny * e;
+        this.velocity.x -= ex * this.inverseMass;
+        this.velocity.y -= ey * this.inverseMass;
+        other.velocity.x += ex * other.inverseMass;
+        other.velocity.y += ey * other.inverseMass;
     }
     repelFixedPoint(other) {
         const nx = (this.position.x - other.point.x) / this.radius;

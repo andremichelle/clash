@@ -8,20 +8,22 @@ export abstract class MovingObject {
     readonly position: Vector // center of mass
     readonly velocity: Vector
     readonly acceleration: Vector
-    readonly forces: Vector = new Vector(0.0, 0.0)
 
     protected constructor(readonly mass: number, x: number = 0.0, y: number = 0.0) {
         this.position = new Vector(x, y)
-        this.velocity = new Vector()
-        this.acceleration = new Vector()
+        this.velocity = new Vector(0.0, 0.0)
+        this.acceleration = new Vector(0.0, 0.0)
     }
 
     move(time: number): void {
-        this.velocity.addScaled(this.forces, time * this.inverseMass)
+        this.velocity.addScaled(this.acceleration, time * this.inverseMass)
         this.position.addScaled(this.velocity, time)
     }
 
     applyForces(time: number): void {
+        // this.velocity.y += 0.1
+        // this.velocity.x *= 0.96
+        // this.velocity.y *= 0.96
     }
 
     abstract wireframe(context: CanvasRenderingContext2D): void
@@ -42,12 +44,9 @@ export class MovingCircle extends MovingObject {
     }
 
     predict(other: SceneObject): NonNullable<Contact> {
-        if (other instanceof MovingObject) {
-            if (other instanceof MovingCircle) {
-                return this.predictMovingCircle(other)
-            }
-        }
-        if (other instanceof FixedPoint) {
+        if (other instanceof MovingCircle) {
+            return this.predictMovingCircle(other)
+        } else if (other instanceof FixedPoint) {
             return this.predictFixedPoint(other)
         } else if (other instanceof FixedGate) {
             return this.predictFixedGate(other)
@@ -113,11 +112,13 @@ export class MovingCircle extends MovingObject {
         const distance = this.radius + other.radius
         const nx = (this.position.x - other.position.x) / distance
         const ny = (this.position.y - other.position.y) / distance
-        const e = -2.0 * ((other.velocity.x - this.velocity.x) * nx + (other.velocity.y - this.velocity.y) * ny) / (this.inverseMass + other.inverseMass)
-        this.velocity.x -= e * nx * this.inverseMass
-        this.velocity.y -= e * ny * this.inverseMass
-        other.velocity.x += e * nx * other.inverseMass
-        other.velocity.y += e * ny * other.inverseMass
+        const e = 2.0 * ((this.velocity.x - other.velocity.x) * nx + (this.velocity.y - other.velocity.y) * ny) / (this.inverseMass + other.inverseMass)
+        const ex = nx * e
+        const ey = ny * e
+        this.velocity.x -= ex * this.inverseMass
+        this.velocity.y -= ey * this.inverseMass
+        other.velocity.x += ex * other.inverseMass
+        other.velocity.y += ey * other.inverseMass
     }
 
     repelFixedPoint(other: FixedPoint): void {

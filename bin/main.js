@@ -7,11 +7,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { FixedPoint, MovingCircle } from "./clash/objects.js";
+import { MovingCircle } from "./clash/objects.js";
 import { Scene } from "./clash/scene.js";
-import { Vector } from "./clash/vector.js";
 import { Boot, preloadImagesOfCssFile } from "./lib/boot.js";
-import { ArrayUtils } from "./lib/common.js";
 import { HTML } from "./lib/dom.js";
 import { Mulberry32 } from "./lib/math.js";
 const showProgress = (() => {
@@ -29,17 +27,13 @@ const showProgress = (() => {
     const scene = new Scene();
     const corners = scene.frame(0.0, 0.0, 0.0, 0.0);
     const random = new Mulberry32();
-    const movingObjects = ArrayUtils.fill(5, () => {
+    for (let i = 0; i < 10; i++) {
         const radius = random.nextDouble(4.0, 64.0);
-        return new MovingCircle(radius * radius, random.nextDouble(64, 512), random.nextDouble(64, 512), radius);
-    });
-    for (const object of movingObjects) {
+        const object = new MovingCircle(radius * radius, random.nextDouble(64, 512), random.nextDouble(64, 512), radius);
         object.velocity.x = random.nextDouble(-0.5, 0.5);
         object.velocity.y = random.nextDouble(-0.5, 0.5);
         scene.add(object);
     }
-    scene.add(new MovingCircle(Number.POSITIVE_INFINITY, 400, 300, 32));
-    scene.add(new FixedPoint(new Vector(600, 300)));
     scene.compile();
     const canvas = HTML.query('canvas');
     const labelTotalEnergy = HTML.query('#total-energy');
@@ -48,13 +42,13 @@ const showProgress = (() => {
     const nextFrame = (time) => {
         lastTime = time;
         scene.solve(16);
-        labelTotalEnergy.textContent = scene.totalEnergy().toFixed(5);
+        labelTotalEnergy.textContent = scene.totalEnergy().toFixed(12);
         const w = canvas.clientWidth;
         const h = canvas.clientHeight;
         corners[1].x = w;
         corners[2].x = w;
-        corners[2].y = h;
-        corners[3].y = h;
+        corners[2].y = h / 2;
+        corners[3].y = h / 2;
         canvas.width = w * devicePixelRatio;
         canvas.height = h * devicePixelRatio;
         context.save();
