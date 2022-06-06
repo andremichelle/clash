@@ -1,6 +1,5 @@
 import {Contact} from "./contact.js"
-import {MovingObject} from "./objects.js"
-import {FixedGate} from "./shapes.js"
+import {FixedGate, MovingObject} from "./objects.js"
 import {Vector} from "./vector.js"
 
 export interface SceneObject {
@@ -65,15 +64,15 @@ export class Scene {
     compile(): void {
         // Call after every change to the scene
         this.testPairs.splice(0, this.testPairs.length, ...this.movingObjects
-            .reduce((pairs: [MovingObject, SceneObject][], movingObject: MovingObject, index: number, movingObjects: MovingObject[]) => pairs
-                .concat(movingObjects.slice(index + 1).map(other => [movingObject, other as SceneObject])), this.movingObjects
+            .reduce((pairs: [MovingObject, SceneObject][], movingObject: MovingObject, index: number) => pairs
+                .concat(this.movingObjects.slice(index + 1).map(other => [movingObject, other as SceneObject])), this.movingObjects
                 .reduce((pairs: [MovingObject, SceneObject][], movingObject: MovingObject) => pairs
                     .concat(this.fixedObjects.map(other => [movingObject, other])), [])))
     }
 
     predictContact(): Contact {
         return this.testPairs.reduce((nearest: Contact, pair: [MovingObject, SceneObject]) =>
-            Contact.proximate(nearest, pair[0].predict(pair[1])), Contact.None)
+            Contact.proximate(nearest, pair[0].predict(pair[1])), Contact.Never)
     }
 
     advance(time: number): void {
@@ -87,7 +86,6 @@ export class Scene {
     wireframe(context: CanvasRenderingContext2D): void {
         context.beginPath()
         this.movingObjects.forEach(object => object.wireframe(context))
-        context.lineWidth = 2.0
         context.strokeStyle = 'orange'
         context.fillStyle = 'black'
         context.stroke()

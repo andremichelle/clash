@@ -1,18 +1,18 @@
-import {MovingObject} from "./objects.js"
 import {SceneObject} from "./scene.js"
+import {MovingObject} from "./objects.js"
 
 export class Contact {
     static readonly MIN_TIME_THRESHOLD = -.015625 // fixing tiny overshoots
 
-    static None = new Contact(Number.POSITIVE_INFINITY, null, null)
+    static Never = new Contact(Number.POSITIVE_INFINITY, null, null)
 
     static threshold(when: number, object: MovingObject, other: SceneObject) {
-        return when > Contact.MIN_TIME_THRESHOLD ? new Contact(when, object, other) : Contact.None
+        return when > Contact.MIN_TIME_THRESHOLD ? new Contact(when, object, other) : Contact.Never
     }
 
     static proximate(current: Contact, other: Contact): Contact {
-        return other === Contact.None
-            ? current : current === Contact.None
+        return other === Contact.Never
+            ? current : current === Contact.Never
                 ? other : other.when < current.when
                     ? other : current
     }
@@ -23,7 +23,6 @@ export class Contact {
     }
 
     repel(): void {
-        this!.moving.touched = true
         this!.moving.repel(this!.other)
     }
 }

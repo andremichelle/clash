@@ -8,7 +8,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { Scene } from "./clash/scene.js";
-import { MovingCircle } from "./clash/shapes.js";
+import { FixedPoint, MovingCircle } from "./clash/objects.js";
+import { Vector } from "./clash/vector.js";
 import { Boot, preloadImagesOfCssFile } from "./lib/boot.js";
 import { ArrayUtils } from "./lib/common.js";
 import { HTML } from "./lib/dom.js";
@@ -28,7 +29,7 @@ const showProgress = (() => {
     const scene = new Scene();
     const corners = scene.frame(0.0, 0.0, 0.0, 0.0);
     const random = new Mulberry32();
-    const movingObjects = ArrayUtils.fill(50, () => {
+    const movingObjects = ArrayUtils.fill(5, () => {
         const radius = random.nextDouble(4.0, 64.0);
         return new MovingCircle(radius * radius, random.nextDouble(64, 400), random.nextDouble(64, 400), radius);
     });
@@ -38,6 +39,7 @@ const showProgress = (() => {
         scene.add(object);
     }
     scene.add(new MovingCircle(Number.POSITIVE_INFINITY, 400, 300, 32));
+    scene.add(new FixedPoint(new Vector(600, 300)));
     scene.compile();
     const canvas = HTML.query('canvas');
     const context = canvas.getContext('2d');

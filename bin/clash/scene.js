@@ -1,6 +1,5 @@
 import { Contact } from "./contact.js";
-import { MovingObject } from "./objects.js";
-import { FixedGate } from "./shapes.js";
+import { FixedGate, MovingObject } from "./objects.js";
 import { Vector } from "./vector.js";
 export class Scene {
     constructor() {
@@ -57,13 +56,13 @@ export class Scene {
     }
     compile() {
         this.testPairs.splice(0, this.testPairs.length, ...this.movingObjects
-            .reduce((pairs, movingObject, index, movingObjects) => pairs
-            .concat(movingObjects.slice(index + 1).map(other => [movingObject, other])), this.movingObjects
+            .reduce((pairs, movingObject, index) => pairs
+            .concat(this.movingObjects.slice(index + 1).map(other => [movingObject, other])), this.movingObjects
             .reduce((pairs, movingObject) => pairs
             .concat(this.fixedObjects.map(other => [movingObject, other])), [])));
     }
     predictContact() {
-        return this.testPairs.reduce((nearest, pair) => Contact.proximate(nearest, pair[0].predict(pair[1])), Contact.None);
+        return this.testPairs.reduce((nearest, pair) => Contact.proximate(nearest, pair[0].predict(pair[1])), Contact.Never);
     }
     advance(time) {
         this.movingObjects.forEach(moving => moving.move(time));
@@ -74,7 +73,6 @@ export class Scene {
     wireframe(context) {
         context.beginPath();
         this.movingObjects.forEach(object => object.wireframe(context));
-        context.lineWidth = 2.0;
         context.strokeStyle = 'orange';
         context.fillStyle = 'black';
         context.stroke();
