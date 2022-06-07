@@ -6,10 +6,9 @@ export declare abstract class MovingObject {
     readonly inverseMass: number;
     readonly position: Vector;
     readonly velocity: Vector;
-    readonly acceleration: Vector;
+    readonly forceAccum: Vector;
     protected constructor(mass: number, x?: number, y?: number);
     move(time: number): void;
-    applyForces(time: number): void;
     abstract wireframe(context: CanvasRenderingContext2D): void;
     abstract predict(other: SceneObject): NonNullable<Contact>;
     abstract repel(other: SceneObject): void;

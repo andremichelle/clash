@@ -44,10 +44,9 @@ export class Scene {
             this.compile();
             this.needsCompile = false;
         }
-        this.forces(remaining);
         let steps = 0;
-        while (remaining > 1e-3) {
-            const contact = this.predictContact();
+        while (remaining > 0.0) {
+            const contact = this.nextContact();
             if (contact.when >= remaining) {
                 this.advance(remaining);
                 break;
@@ -70,19 +69,15 @@ export class Scene {
             .reduce((pairs, movingObject) => pairs
             .concat(this.fixedObjects.map(other => [movingObject, other])), [])));
     }
-    predictContact() {
+    nextContact() {
         return this.testPairs.reduce((nearest, pair) => Contact.proximate(nearest, pair[0].predict(pair[1])), Contact.Never);
     }
     advance(time) {
         this.movingObjects.forEach(moving => moving.move(time));
     }
-    forces(time) {
-        this.movingObjects.forEach(moving => moving.applyForces(time));
-    }
     wireframe(context) {
         context.beginPath();
         this.movingObjects.forEach(object => object.wireframe(context));
-        context.lineWidth = 2.0;
         context.strokeStyle = 'rgb(255, 200, 60)';
         context.fillStyle = 'black';
         context.stroke();

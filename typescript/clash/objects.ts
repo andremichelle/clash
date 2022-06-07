@@ -7,23 +7,26 @@ export abstract class MovingObject {
     readonly inverseMass: number = this.mass === Number.POSITIVE_INFINITY ? 0.0 : 1.0 / this.mass
     readonly position: Vector // center of mass
     readonly velocity: Vector
-    readonly acceleration: Vector
+    readonly forceAccum: Vector
 
     protected constructor(readonly mass: number, x: number = 0.0, y: number = 0.0) {
         this.position = new Vector(x, y)
         this.velocity = new Vector(0.0, 0.0)
-        this.acceleration = new Vector(0.0, 0.0)
+        this.forceAccum = new Vector(0.0, 0.0)
     }
 
     move(time: number): void {
-        this.velocity.addScaled(this.acceleration, time * this.inverseMass)
         this.position.addScaled(this.velocity, time)
-    }
 
-    applyForces(time: number): void {
-        // this.velocity.y += 0.1
-        // this.velocity.x *= 0.96
-        // this.velocity.y *= 0.96
+        const gravity = 0.001
+        const drag = -0.3
+
+        this.forceAccum.y = gravity * this.mass
+        this.forceAccum.x += this.velocity.x * drag
+        this.forceAccum.y += this.velocity.y * drag
+
+        this.velocity.addScaled(this.forceAccum, time * this.inverseMass)
+        this.forceAccum.zero()
     }
 
     abstract wireframe(context: CanvasRenderingContext2D): void
@@ -70,15 +73,15 @@ export class MovingCircle extends MovingObject {
     }
 
     predictFixedPoint(other: FixedPoint): NonNullable<Contact> {
-        const ex = other.point.x - this.position.x
-        const ey = other.point.y - this.position.y
+        const dx = other.point.x - this.position.x
+        const dy = other.point.y - this.position.y
         const vx = this.velocity.x
         const vy = this.velocity.y
         const vs = vx * vx + vy * vy
-        const ev = ex * vy - ey * vx
+        const ev = dx * vy - dy * vx
         const sq = vs * this.radius * this.radius - ev * ev
         if (sq < 0.0) return Contact.Never
-        const when = -(Math.sqrt(sq) - ey * vy - ex * vx) / vs
+        const when = -(Math.sqrt(sq) - dy * vy - dx * vx) / vs
         return Contact.threshold(when, this, other)
     }
 

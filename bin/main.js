@@ -28,19 +28,37 @@ const showProgress = (() => {
     const scene = new Scene();
     const corners = scene.frame(0.0, 0.0, 0.0, 0.0);
     const random = new Mulberry32();
-    for (let i = 0; i < 100; i++) {
-        const radius = random.nextDouble(4.0, 32.0);
-        const mass = radius * radius;
-        const x = random.nextDouble(radius, window.innerWidth - radius);
-        const y = random.nextDouble(radius, window.innerHeight - radius);
-        const object = new MovingCircle(mass, x, y, radius);
-        object.velocity.x = random.nextDouble(-0.25, 0.25);
-        object.velocity.y = random.nextDouble(-0.25, 0.25);
-        scene.add(object);
-    }
-    scene.add(new MovingCircle(Number.POSITIVE_INFINITY, 400, 300, 32));
-    scene.add(new FixedPoint(new Vector(600, 300)));
-    scene.compile();
+    const Scenes = [
+        () => {
+            for (let i = 0; i < 100; i++) {
+                const radius = random.nextDouble(4.0, 32.0);
+                const mass = radius * radius;
+                const x = random.nextDouble(radius, window.innerWidth - radius);
+                const y = random.nextDouble(radius, window.innerHeight - radius);
+                const object = new MovingCircle(mass, x, y, radius);
+                object.velocity.x = random.nextDouble(-0.25, 0.25);
+                object.velocity.y = random.nextDouble(-0.25, 0.25);
+                scene.add(object);
+            }
+            scene.add(new MovingCircle(Number.POSITIVE_INFINITY, 400, 300, 32));
+            scene.add(new FixedPoint(new Vector(600, 300)));
+        },
+        () => {
+            const circleA = new MovingCircle(100.0, 300.0, 300.0, 32);
+            const circleB = new MovingCircle(100.0, 500.0 - 32.0, 300.0, 32);
+            const circleC = new MovingCircle(100.0, 500.0 + 32.0, 300.0, 32);
+            const circleD = new MovingCircle(100.0, 700.0, 300.0, 32);
+            circleA.velocity.x = 1.5;
+            circleD.velocity.x = -1;
+            scene.add(circleA, circleB, circleC, circleD);
+        },
+        () => {
+            const circle = new MovingCircle(100.0, 100.0, 300.0, 32);
+            circle.velocity.x = 1.0;
+            scene.add(circle);
+        }
+    ];
+    Scenes[2]();
     const canvas = HTML.query('canvas');
     const labelTotalEnergy = HTML.query('#total-energy');
     const labelNumTests = HTML.query('#num-tests');
@@ -48,7 +66,7 @@ const showProgress = (() => {
     const context = canvas.getContext('2d');
     const nextFrame = () => {
         scene.solve(1000.0 / 60.0);
-        labelTotalEnergy.textContent = scene.totalEnergy().toFixed(12);
+        labelTotalEnergy.textContent = scene.totalEnergy().toFixed(10);
         labelNumTests.textContent = `${scene.numTests()}`;
         labelNumObject.textContent = `${scene.numObjects()}`;
         const w = canvas.clientWidth;

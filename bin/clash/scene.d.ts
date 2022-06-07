@@ -1,5 +1,4 @@
 import { Contact } from "./contact.js";
-import { MovingObject } from "./objects.js";
 import { Vector } from "./vector.js";
 export interface SceneObject {
     wireframe(context: CanvasRenderingContext2D): void;
@@ -11,12 +10,11 @@ export declare class Scene {
     private needsCompile;
     running: boolean;
     frame(xMin: number, yMin: number, xMax: number, yMax: number): Vector[];
-    add(...objects: (MovingObject | SceneObject)[]): void;
+    add(...objects: SceneObject[]): void;
     solve(remaining: number): void;
     compile(): void;
-    predictContact(): Contact;
+    nextContact(): Contact;
     advance(time: number): void;
-    forces(time: number): void;
     wireframe(context: CanvasRenderingContext2D): void;
     numTests: () => number;
     numObjects: () => number;

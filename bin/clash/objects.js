@@ -7,13 +7,17 @@ export class MovingObject {
         this.inverseMass = this.mass === Number.POSITIVE_INFINITY ? 0.0 : 1.0 / this.mass;
         this.position = new Vector(x, y);
         this.velocity = new Vector(0.0, 0.0);
-        this.acceleration = new Vector(0.0, 0.0);
+        this.forceAccum = new Vector(0.0, 0.0);
     }
     move(time) {
-        this.velocity.addScaled(this.acceleration, time * this.inverseMass);
         this.position.addScaled(this.velocity, time);
-    }
-    applyForces(time) {
+        const gravity = 0.001;
+        const drag = -0.3;
+        this.forceAccum.y = gravity * this.mass;
+        this.forceAccum.x += this.velocity.x * drag;
+        this.forceAccum.y += this.velocity.y * drag;
+        this.velocity.addScaled(this.forceAccum, time * this.inverseMass);
+        this.forceAccum.zero();
     }
 }
 export class MovingCircle extends MovingObject {
@@ -54,16 +58,16 @@ export class MovingCircle extends MovingObject {
         return Contact.threshold(when, this, other);
     }
     predictFixedPoint(other) {
-        const ex = other.point.x - this.position.x;
-        const ey = other.point.y - this.position.y;
+        const dx = other.point.x - this.position.x;
+        const dy = other.point.y - this.position.y;
         const vx = this.velocity.x;
         const vy = this.velocity.y;
         const vs = vx * vx + vy * vy;
-        const ev = ex * vy - ey * vx;
+        const ev = dx * vy - dy * vx;
         const sq = vs * this.radius * this.radius - ev * ev;
         if (sq < 0.0)
             return Contact.Never;
-        const when = -(Math.sqrt(sq) - ey * vy - ex * vx) / vs;
+        const when = -(Math.sqrt(sq) - dy * vy - dx * vx) / vs;
         return Contact.threshold(when, this, other);
     }
     predictFixedGate(other) {

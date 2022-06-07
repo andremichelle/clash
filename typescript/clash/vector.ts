@@ -6,6 +6,11 @@ export class Vector {
     constructor(public x: number = 0.0, public y: number = 0.0) {
     }
 
+    zero(): void {
+        this.x = 0.0
+        this.y = 0.0
+    }
+
     add(other: Vector): void {
         this.x += other.x
         this.y += other.y
@@ -16,6 +21,11 @@ export class Vector {
         this.y += other.y * scale
     }
 
+    scale(value: number): void {
+        this.x *= value
+        this.y *= value
+    }
+
     normalize(): Vector {
         const length = this.length()
         console.assert(length !== 0.0)
@@ -24,8 +34,7 @@ export class Vector {
 
     normal(): Vector {
         const length = this.length()
-        console.assert(length !== 0.0)
-        return new Vector(this.y / length, -this.x / length)
+        return length > 0.0 ? new Vector(this.y / length, -this.x / length) : new Vector(this.y, -this.x)
     }
 
     dot() {
@@ -33,6 +42,10 @@ export class Vector {
     }
 
     length() {
-        return Math.sqrt(this.x * this.x + this.y * this.y)
+        return Math.sqrt(this.dot())
+    }
+
+    toString(): string {
+        return `(x: ${this.x}, y: ${this.y})`
     }
 }

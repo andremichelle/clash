@@ -29,7 +29,7 @@ export class Scene {
         return corners
     }
 
-    add(...objects: (MovingObject | SceneObject)[]): void {
+    add(...objects: SceneObject[]): void {
         for (const object of objects) {
             if (object instanceof MovingObject) {
                 this.movingObjects.push(object)
@@ -45,10 +45,9 @@ export class Scene {
             this.compile()
             this.needsCompile = false
         }
-        this.forces(remaining)
         let steps = 0
-        while (remaining > 1e-3) {
-            const contact: Contact = this.predictContact()
+        while (remaining > 0.0) {
+            const contact: Contact = this.nextContact()
             if (contact.when >= remaining) {
                 this.advance(remaining)
                 break
@@ -72,7 +71,7 @@ export class Scene {
                     .concat(this.fixedObjects.map(other => [movingObject, other])), [])))
     }
 
-    predictContact(): Contact {
+    nextContact(): Contact {
         return this.testPairs.reduce((nearest: Contact, pair: [MovingObject, SceneObject]) =>
             Contact.proximate(nearest, pair[0].predict(pair[1])), Contact.Never)
     }
@@ -81,14 +80,9 @@ export class Scene {
         this.movingObjects.forEach(moving => moving.move(time))
     }
 
-    forces(time: number): void {
-        this.movingObjects.forEach(moving => moving.applyForces(time))
-    }
-
     wireframe(context: CanvasRenderingContext2D): void {
         context.beginPath()
         this.movingObjects.forEach(object => object.wireframe(context))
-        context.lineWidth = 2.0
         context.strokeStyle = 'rgb(255, 200, 60)'
         context.fillStyle = 'black'
         context.stroke()
