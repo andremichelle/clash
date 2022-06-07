@@ -17,6 +17,6 @@ export class Contact {
         this.moving.repel(this.other);
     }
 }
-Contact.MIN_TIME_THRESHOLD = 0.0;
+Contact.MIN_TIME_THRESHOLD = -.015625;
 Contact.Never = new Contact(Number.POSITIVE_INFINITY, null, null);
 //# sourceMappingURL=contact.js.map

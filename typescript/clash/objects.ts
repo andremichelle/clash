@@ -16,7 +16,7 @@ export abstract class MovingObject {
     }
 
     applyForces(): void {
-        const gravity = 0.002
+        const gravity = 0.0//02
 
         this.force.zero()
         if (this.mass !== Number.POSITIVE_INFINITY) {
@@ -27,7 +27,7 @@ export abstract class MovingObject {
     integrate(time: number): void {
         this.position.addScaled(this.velocity, time)
         this.velocity.addScaled(this.force, time * this.inverseMass)
-        this.velocity.scale(Math.pow(0.997, time))
+        // this.velocity.scale(Math.pow(0.997, time))
     }
 
     abstract wireframe(context: CanvasRenderingContext2D): void
@@ -52,7 +52,7 @@ export class MovingCircle extends MovingObject {
             return this.predictMovingCircle(other)
         } else if (other instanceof FixedPoint) {
             return this.predictFixedPoint(other)
-        } else if (other instanceof FixedGate) {
+        } else if (other instanceof FixedLine) {
             return this.predictFixedGate(other)
         }
         throw new Error(`No strategy for predicting ${other.constructor.name}`)
@@ -86,16 +86,16 @@ export class MovingCircle extends MovingObject {
         return Contact.create(when, this, other)
     }
 
-    predictFixedGate(other: FixedGate): NonNullable<Contact> {
+    predictFixedGate(other: FixedLine): NonNullable<Contact> {
         const dx = other.p1.x - other.p0.x
         const dy = other.p1.y - other.p0.y
         const ud = this.velocity.y * dx - this.velocity.x * dy
-        if (ud <= 0) return Contact.Never // only one direction
-        const dd = Math.sqrt(dx * dx + dy * dy)
+        if (other.gate && ud <= 0) return Contact.Never // only one direction
+        const dd = Math.sqrt(dx * dx + dy * dy) * Math.sign(ud)
         const px = (this.position.x - other.p0.x) - dy / dd * this.radius
         const py = (this.position.y - other.p0.y) + dx / dd * this.radius
-        const ua = (this.velocity.y * px - this.velocity.x * py)
-        if (ua < 0.0 || ua > ud) return Contact.Never
+        const ua = (this.velocity.y * px - this.velocity.x * py) / ud
+        if (ua < 0.0 || ua > 1.0) return Contact.Never
         const when = (dy * px - dx * py) / ud
         return Contact.create(when, this, other)
     }
@@ -105,7 +105,7 @@ export class MovingCircle extends MovingObject {
             this.repelMovingCircle(other)
         } else if (other instanceof FixedPoint) {
             this.repelFixedPoint(other)
-        } else if (other instanceof FixedGate) {
+        } else if (other instanceof FixedLine) {
             this.repelFixedGate(other)
         } else {
             throw new Error(`No strategy for repelling ${other.constructor.name}`)
@@ -116,7 +116,8 @@ export class MovingCircle extends MovingObject {
         const distance = this.radius + other.radius
         const nx = (this.position.x - other.position.x) / distance
         const ny = (this.position.y - other.position.y) / distance
-        const e = 2.0 * ((this.velocity.x - other.velocity.x) * nx + (this.velocity.y - other.velocity.y) * ny) / (this.inverseMass + other.inverseMass)
+        const e = 2.0 * ((this.velocity.x - other.velocity.x) * nx + (this.velocity.y - other.velocity.y) * ny)
+            / (this.inverseMass + other.inverseMass)
         const ex = nx * e
         const ey = ny * e
         this.velocity.x -= ex * this.inverseMass
@@ -133,7 +134,7 @@ export class MovingCircle extends MovingObject {
         this.velocity.y -= ny * e
     }
 
-    repelFixedGate(other: FixedGate): void {
+    repelFixedGate(other: FixedLine): void {
         const dx = other.p1.x - other.p0.x
         const dy = other.p1.y - other.p0.y
         const dd = Math.sqrt(dx * dx + dy * dy)
@@ -158,23 +159,25 @@ export class FixedPoint implements SceneObject {
     }
 }
 
-export class FixedGate implements SceneObject {
-    constructor(readonly p0: Readonly<Vector>, readonly p1: Readonly<Vector>) {
+export class FixedLine implements SceneObject {
+    constructor(readonly p0: Readonly<Vector>, readonly p1: Readonly<Vector>, readonly gate: boolean = false) {
     }
 
     wireframe(context: CanvasRenderingContext2D): void {
         context.moveTo(this.p0.x, this.p0.y)
         context.lineTo(this.p1.x, this.p1.y)
-        const dx = this.p1.x - this.p0.x
-        const dy = this.p1.y - this.p0.y
-        const dd = Math.sqrt(dx * dx + dy * dy)
-        const cx = this.p0.x + dx * 0.5
-        const cy = this.p0.y + dy * 0.5
-        const nx = dy / dd
-        const ny = -dx / dd
-        const tn = 8
-        context.moveTo(cx - ny * tn, cy + nx * tn)
-        context.lineTo(cx + nx * tn, cy + ny * tn)
-        context.lineTo(cx + ny * tn, cy - nx * tn)
+        if (this.gate) {
+            const dx = this.p1.x - this.p0.x
+            const dy = this.p1.y - this.p0.y
+            const dd = Math.sqrt(dx * dx + dy * dy)
+            const cx = this.p0.x + dx * 0.5
+            const cy = this.p0.y + dy * 0.5
+            const nx = dy / dd
+            const ny = -dx / dd
+            const tn = 8
+            context.moveTo(cx - ny * tn, cy + nx * tn)
+            context.lineTo(cx + nx * tn, cy + ny * tn)
+            context.lineTo(cx + ny * tn, cy - nx * tn)
+        }
     }
 }

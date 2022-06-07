@@ -2,7 +2,7 @@ import {MovingObject} from "./objects.js"
 import {SceneObject} from "./scene.js"
 
 export class Contact {
-    static readonly MIN_TIME_THRESHOLD = 0.0//-.015625 // fixing tiny overshoots
+    static readonly MIN_TIME_THRESHOLD = -.015625 // fixing tiny overshoots
 
     static Never = new Contact(Number.POSITIVE_INFINITY, null, null)
 

@@ -21,20 +21,21 @@ export declare class MovingCircle extends MovingObject {
     predict(other: SceneObject): NonNullable<Contact>;
     predictMovingCircle(other: MovingCircle): NonNullable<Contact>;
     predictFixedPoint(other: FixedPoint): NonNullable<Contact>;
-    predictFixedGate(other: FixedGate): NonNullable<Contact>;
+    predictFixedGate(other: FixedLine): NonNullable<Contact>;
     repel(other: SceneObject): void;
     repelMovingCircle(other: MovingCircle): void;
     repelFixedPoint(other: FixedPoint): void;
-    repelFixedGate(other: FixedGate): void;
+    repelFixedGate(other: FixedLine): void;
 }
 export declare class FixedPoint implements SceneObject {
     readonly point: Readonly<Vector>;
     constructor(point: Readonly<Vector>);
     wireframe(context: CanvasRenderingContext2D): void;
 }
-export declare class FixedGate implements SceneObject {
+export declare class FixedLine implements SceneObject {
     readonly p0: Readonly<Vector>;
     readonly p1: Readonly<Vector>;
-    constructor(p0: Readonly<Vector>, p1: Readonly<Vector>);
+    readonly gate: boolean;
+    constructor(p0: Readonly<Vector>, p1: Readonly<Vector>, gate?: boolean);
     wireframe(context: CanvasRenderingContext2D): void;
 }

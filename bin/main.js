@@ -7,7 +7,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { FixedPoint, MovingCircle } from "./clash/objects.js";
+import { FixedPolygonBuilder } from "./clash/composite.js";
+import { FixedLine, MovingCircle } from "./clash/objects.js";
 import { Scene } from "./clash/scene.js";
 import { Vector } from "./clash/vector.js";
 import { Boot, preloadImagesOfCssFile } from "./lib/boot.js";
@@ -40,8 +41,13 @@ const showProgress = (() => {
                 object.velocity.y = random.nextDouble(-0.25, 0.25);
                 scene.add(object);
             }
-            scene.add(new MovingCircle(Number.POSITIVE_INFINITY, 400, 300, 32));
-            scene.add(new FixedPoint(new Vector(600, 300)));
+            scene.addAll(new FixedPolygonBuilder()
+                .addCoordinate(300, 100)
+                .addCoordinate(700, 200)
+                .addCoordinate(600, 500)
+                .addCoordinate(240, 400)
+                .close()
+                .build());
         },
         () => {
             const circleA = new MovingCircle(100.0, 300.0, 300.0, 32);
@@ -53,8 +59,12 @@ const showProgress = (() => {
             scene.add(circleA, circleB, circleC, circleD);
         },
         () => {
-            const a = new MovingCircle(100.0, 500.0, 300.0, 32);
-            scene.add(a);
+            const ca = new MovingCircle(100.0, 100.0, 500.0, 32);
+            const cb = new MovingCircle(100.0, 200.0, 300.0, 32);
+            ca.velocity.y = -1;
+            cb.velocity.y = 1;
+            const ga = new FixedLine(new Vector(0, 400), new Vector(500, 400));
+            scene.add(ca, ga, cb);
         }
     ];
     Scenes[0]();

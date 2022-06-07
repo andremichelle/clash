@@ -1,5 +1,5 @@
 import {Contact} from "./contact.js"
-import {FixedGate, MovingObject} from "./objects.js"
+import {FixedLine, MovingObject} from "./objects.js"
 import {Vector} from "./vector.js"
 
 export interface SceneObject {
@@ -7,6 +7,9 @@ export interface SceneObject {
 }
 
 export class Scene {
+    private static readonly REMAINING_THRESHOLD = 1e-7
+    private static readonly MAX_ITERATIONS = 10000
+
     private readonly fixedObjects: SceneObject[] = []
     private readonly movingObjects: MovingObject[] = []
     private readonly testPairs: [MovingObject, SceneObject][] = []
@@ -22,10 +25,10 @@ export class Scene {
             new Vector(xMax, yMax),
             new Vector(xMin, yMax)
         ]
-        this.add(new FixedGate(corners[1], corners[0]))
-        this.add(new FixedGate(corners[2], corners[1]))
-        this.add(new FixedGate(corners[3], corners[2]))
-        this.add(new FixedGate(corners[0], corners[3]))
+        this.add(new FixedLine(corners[1], corners[0], true))
+        this.add(new FixedLine(corners[2], corners[1], true))
+        this.add(new FixedLine(corners[3], corners[2], true))
+        this.add(new FixedLine(corners[0], corners[3], true))
         return corners
     }
 
@@ -40,14 +43,17 @@ export class Scene {
         this.needsCompile = true
     }
 
+    addAll(composite: { objects: SceneObject[] }): void {
+        composite.objects.forEach(object => this.add(object))
+    }
+
     step(remaining: number): void {
         if (this.needsCompile) {
             this.compile()
-            this.needsCompile = false
         }
-        this.applyForces(remaining)
+        this.applyForces()
         let steps = 0
-        while (remaining > 0.0) {
+        while (remaining > Scene.REMAINING_THRESHOLD) {
             const contact: Contact = this.nextContact()
             if (contact.when >= remaining) {
                 this.integrate(remaining)
@@ -56,7 +62,7 @@ export class Scene {
             this.integrate(contact.when)
             contact.repel()
             remaining -= contact.when
-            if (++steps > 10000) {
+            if (++steps > Scene.MAX_ITERATIONS) {
                 console.log(steps, contact)
                 throw new Error('Solving took too long')
             }
@@ -69,6 +75,7 @@ export class Scene {
                 .concat(this.movingObjects.slice(index + 1).map(other => [movingObject, other as SceneObject])), this.movingObjects
                 .reduce((pairs: [MovingObject, SceneObject][], movingObject: MovingObject) => pairs
                     .concat(this.fixedObjects.map(other => [movingObject, other])), [])))
+        this.needsCompile = false
     }
 
     nextContact(): Contact {
@@ -76,7 +83,7 @@ export class Scene {
             Contact.proximate(nearest, pair[0].predict(pair[1])), Contact.Never)
     }
 
-    applyForces(time: number) {
+    applyForces() {
         this.movingObjects.forEach(moving => moving.applyForces())
     }
 
