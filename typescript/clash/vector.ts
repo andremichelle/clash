@@ -28,13 +28,16 @@ export class Vector {
 
     normalize(): Vector {
         const length = this.length()
-        console.assert(length !== 0.0)
-        return new Vector(this.x / length, this.y / length)
+        return length > 0.0 ? new Vector(this.x / length, this.y / length) : this.clone()
     }
 
     normal(): Vector {
         const length = this.length()
         return length > 0.0 ? new Vector(this.y / length, -this.x / length) : new Vector(this.y, -this.x)
+    }
+
+    clone(): Vector {
+        return new Vector(this.x, this.y)
     }
 
     dot() {

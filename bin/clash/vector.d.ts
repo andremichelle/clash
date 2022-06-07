@@ -9,6 +9,7 @@ export declare class Vector {
     scale(value: number): void;
     normalize(): Vector;
     normal(): Vector;
+    clone(): Vector;
     dot(): number;
     length(): number;
     toString(): string;

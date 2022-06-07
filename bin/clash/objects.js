@@ -7,17 +7,19 @@ export class MovingObject {
         this.inverseMass = this.mass === Number.POSITIVE_INFINITY ? 0.0 : 1.0 / this.mass;
         this.position = new Vector(x, y);
         this.velocity = new Vector(0.0, 0.0);
-        this.forceAccum = new Vector(0.0, 0.0);
+        this.force = new Vector(0.0, 0.0);
     }
-    move(time) {
+    applyForces() {
+        const gravity = 0.002;
+        this.force.zero();
+        if (this.mass !== Number.POSITIVE_INFINITY) {
+            this.force.y += gravity * this.mass;
+        }
+    }
+    integrate(time) {
         this.position.addScaled(this.velocity, time);
-        const gravity = 0.001;
-        const drag = -0.3;
-        this.forceAccum.y = gravity * this.mass;
-        this.forceAccum.x += this.velocity.x * drag;
-        this.forceAccum.y += this.velocity.y * drag;
-        this.velocity.addScaled(this.forceAccum, time * this.inverseMass);
-        this.forceAccum.zero();
+        this.velocity.addScaled(this.force, time * this.inverseMass);
+        this.velocity.scale(Math.pow(0.997, time));
     }
 }
 export class MovingCircle extends MovingObject {
@@ -55,7 +57,7 @@ export class MovingCircle extends MovingObject {
         if (sq < 0.0)
             return Contact.Never;
         const when = -(Math.sqrt(sq) - ey * vy - ex * vx) / vs;
-        return Contact.threshold(when, this, other);
+        return Contact.create(when, this, other);
     }
     predictFixedPoint(other) {
         const dx = other.point.x - this.position.x;
@@ -68,7 +70,7 @@ export class MovingCircle extends MovingObject {
         if (sq < 0.0)
             return Contact.Never;
         const when = -(Math.sqrt(sq) - dy * vy - dx * vx) / vs;
-        return Contact.threshold(when, this, other);
+        return Contact.create(when, this, other);
     }
     predictFixedGate(other) {
         const dx = other.p1.x - other.p0.x;
@@ -83,7 +85,7 @@ export class MovingCircle extends MovingObject {
         if (ua < 0.0 || ua > ud)
             return Contact.Never;
         const when = (dy * px - dx * py) / ud;
-        return Contact.threshold(when, this, other);
+        return Contact.create(when, this, other);
     }
     repel(other) {
         if (other instanceof MovingCircle) {

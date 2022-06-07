@@ -24,12 +24,14 @@ export class Vector {
     }
     normalize() {
         const length = this.length();
-        console.assert(length !== 0.0);
-        return new Vector(this.x / length, this.y / length);
+        return length > 0.0 ? new Vector(this.x / length, this.y / length) : this.clone();
     }
     normal() {
         const length = this.length();
         return length > 0.0 ? new Vector(this.y / length, -this.x / length) : new Vector(this.y, -this.x);
+    }
+    clone() {
+        return new Vector(this.x, this.y);
     }
     dot() {
         return this.x * this.x + this.y * this.y;

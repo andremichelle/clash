@@ -53,19 +53,18 @@ const showProgress = (() => {
             scene.add(circleA, circleB, circleC, circleD);
         },
         () => {
-            const circle = new MovingCircle(100.0, 100.0, 300.0, 32);
-            circle.velocity.x = 1.0;
-            scene.add(circle);
+            const a = new MovingCircle(100.0, 500.0, 300.0, 32);
+            scene.add(a);
         }
     ];
-    Scenes[2]();
+    Scenes[0]();
     const canvas = HTML.query('canvas');
     const labelTotalEnergy = HTML.query('#total-energy');
     const labelNumTests = HTML.query('#num-tests');
     const labelNumObject = HTML.query('#num-objects');
     const context = canvas.getContext('2d');
     const nextFrame = () => {
-        scene.solve(1000.0 / 60.0);
+        scene.step(1000.0 / 60.0);
         labelTotalEnergy.textContent = scene.totalEnergy().toFixed(10);
         labelNumTests.textContent = `${scene.numTests()}`;
         labelNumObject.textContent = `${scene.numObjects()}`;

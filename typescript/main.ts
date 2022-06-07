@@ -61,12 +61,11 @@ const showProgress = (() => {
             scene.add(circleA, circleB, circleC, circleD)
         },
         () => {
-            const circle = new MovingCircle(100.0, 100.0, 300.0, 32)
-            circle.velocity.x = 1.0
-            scene.add(circle)
+            const a = new MovingCircle(100.0, 500.0, 300.0, 32)
+            scene.add(a)
         }
     ]
-    Scenes[2]()
+    Scenes[0]()
 
     // --- BOOT ENDS ---
     const canvas: HTMLCanvasElement = HTML.query('canvas')
@@ -75,7 +74,7 @@ const showProgress = (() => {
     const labelNumObject: HTMLCanvasElement = HTML.query('#num-objects')
     const context: CanvasRenderingContext2D = canvas.getContext('2d')
     const nextFrame = () => {
-        scene.solve(1000.0 / 60.0) // assume steady 60fps
+        scene.step(1000.0 / 60.0) // assume steady 60fps
         labelTotalEnergy.textContent = scene.totalEnergy().toFixed(10)
         labelNumTests.textContent = `${scene.numTests()}`
         labelNumObject.textContent = `${scene.numObjects()}`

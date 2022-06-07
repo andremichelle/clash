@@ -11,10 +11,11 @@ export declare class Scene {
     running: boolean;
     frame(xMin: number, yMin: number, xMax: number, yMax: number): Vector[];
     add(...objects: SceneObject[]): void;
-    solve(remaining: number): void;
+    step(remaining: number): void;
     compile(): void;
     nextContact(): Contact;
-    advance(time: number): void;
+    applyForces(time: number): void;
+    integrate(time: number): void;
     wireframe(context: CanvasRenderingContext2D): void;
     numTests: () => number;
     numObjects: () => number;

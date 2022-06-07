@@ -40,22 +40,22 @@ export class Scene {
         this.needsCompile = true
     }
 
-    solve(remaining: number): void {
+    step(remaining: number): void {
         if (this.needsCompile) {
             this.compile()
             this.needsCompile = false
         }
+        this.applyForces(remaining)
         let steps = 0
         while (remaining > 0.0) {
             const contact: Contact = this.nextContact()
             if (contact.when >= remaining) {
-                this.advance(remaining)
+                this.integrate(remaining)
                 break
-            } else {
-                this.advance(contact.when)
-                contact.repel()
-                remaining -= contact.when
             }
+            this.integrate(contact.when)
+            contact.repel()
+            remaining -= contact.when
             if (++steps > 10000) {
                 console.log(steps, contact)
                 throw new Error('Solving took too long')
@@ -76,8 +76,12 @@ export class Scene {
             Contact.proximate(nearest, pair[0].predict(pair[1])), Contact.Never)
     }
 
-    advance(time: number): void {
-        this.movingObjects.forEach(moving => moving.move(time))
+    applyForces(time: number) {
+        this.movingObjects.forEach(moving => moving.applyForces())
+    }
+
+    integrate(time: number): void {
+        this.movingObjects.forEach(moving => moving.integrate(time))
     }
 
     wireframe(context: CanvasRenderingContext2D): void {

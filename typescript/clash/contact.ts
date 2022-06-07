@@ -6,8 +6,8 @@ export class Contact {
 
     static Never = new Contact(Number.POSITIVE_INFINITY, null, null)
 
-    static threshold(when: number, object: MovingObject, other: SceneObject) {
-        return when >= 0.0 ? new Contact(when, object, other) : Contact.Never
+    static create(when: number, object: MovingObject, other: SceneObject) {
+        return when >= Contact.MIN_TIME_THRESHOLD ? new Contact(when, object, other) : Contact.Never
     }
 
     static proximate(current: Contact, other: Contact): Contact {

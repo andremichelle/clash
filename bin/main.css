@@ -259,6 +259,7 @@ main p {
   position: absolute;
   display: grid;
   grid-template-columns: 1fr 1fr;
+  column-gap: 8px;
 }
 main p > span {
   white-space: nowrap;
