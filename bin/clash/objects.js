@@ -37,6 +37,9 @@ export class MovingCircle extends MovingObject {
         else if (other instanceof FixedPoint) {
             return this.predictFixedPoint(other);
         }
+        else if (other instanceof FixedCircle) {
+            return this.predictFixedCircle(other);
+        }
         else if (other instanceof FixedLine) {
             return this.predictFixedGate(other);
         }
@@ -71,6 +74,20 @@ export class MovingCircle extends MovingObject {
         const when = -(Math.sqrt(sq) - dy * vy - dx * vx) / vs;
         return Contact.create(when, this, other);
     }
+    predictFixedCircle(other) {
+        const dx = other.center.x - this.position.x;
+        const dy = other.center.y - this.position.y;
+        const rr = this.radius + other.radius;
+        const vx = this.velocity.x;
+        const vy = this.velocity.y;
+        const vs = vx * vx + vy * vy;
+        const ev = dx * vy - dy * vx;
+        const sq = vs * rr * rr - ev * ev;
+        if (sq < 0.0)
+            return Contact.Never;
+        const when = -(Math.sqrt(sq) - dy * vy - dx * vx) / vs;
+        return Contact.create(when, this, other);
+    }
     predictFixedGate(other) {
         const dx = other.p1.x - other.p0.x;
         const dy = other.p1.y - other.p0.y;
@@ -92,6 +109,9 @@ export class MovingCircle extends MovingObject {
         }
         else if (other instanceof FixedPoint) {
             this.repelFixedPoint(other);
+        }
+        else if (other instanceof FixedCircle) {
+            this.repelFixedCircle(other);
         }
         else if (other instanceof FixedLine) {
             this.repelFixedGate(other);
@@ -120,6 +140,14 @@ export class MovingCircle extends MovingObject {
         this.velocity.x -= nx * e;
         this.velocity.y -= ny * e;
     }
+    repelFixedCircle(other) {
+        const nn = this.radius + other.radius;
+        const nx = (this.position.x - other.center.x) / nn;
+        const ny = (this.position.y - other.center.y) / nn;
+        const e = 2.0 * (nx * this.velocity.x + ny * this.velocity.y);
+        this.velocity.x -= nx * e;
+        this.velocity.y -= ny * e;
+    }
     repelFixedGate(other) {
         const dx = other.p1.x - other.p0.x;
         const dy = other.p1.y - other.p0.y;
@@ -141,6 +169,16 @@ export class FixedPoint {
         context.lineTo(this.point.x + radius, this.point.y + radius);
         context.moveTo(this.point.x + radius, this.point.y - radius);
         context.lineTo(this.point.x - radius, this.point.y + radius);
+    }
+}
+export class FixedCircle {
+    constructor(center, radius) {
+        this.center = center;
+        this.radius = radius;
+    }
+    wireframe(context) {
+        context.moveTo(this.center.x + this.radius, this.center.y);
+        context.arc(this.center.x, this.center.y, this.radius, 0.0, TAU);
     }
 }
 export class FixedLine {

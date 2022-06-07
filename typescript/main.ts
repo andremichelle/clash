@@ -1,5 +1,5 @@
 import {FixedPolygonBuilder} from "./clash/composite.js"
-import {FixedLine, MovingCircle} from "./clash/objects.js"
+import {FixedCircle, FixedLine, MovingCircle} from "./clash/objects.js"
 import {Scene} from "./clash/scene.js"
 import {Vector} from "./clash/vector.js"
 import {Boot, preloadImagesOfCssFile} from "./lib/boot.js"
@@ -51,13 +51,14 @@ const showProgress = (() => {
                 object.velocity.y = random.nextDouble(-0.25, 0.25)
                 scene.add(object)
             }
-            scene.addAll(new FixedPolygonBuilder()
+            scene.addComposite(new FixedPolygonBuilder()
                 .addCoordinate(300, 100)
                 .addCoordinate(700, 200)
                 .addCoordinate(600, 500)
                 .addCoordinate(240, 400)
                 .close()
                 .build())
+            scene.add(new FixedCircle(new Vector(800, 400), 64))
         },
         () => {
             const circleA = new MovingCircle(100.0, 300.0, 300.0, 32)

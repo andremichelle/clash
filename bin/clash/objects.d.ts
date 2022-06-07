@@ -21,15 +21,23 @@ export declare class MovingCircle extends MovingObject {
     predict(other: SceneObject): NonNullable<Contact>;
     predictMovingCircle(other: MovingCircle): NonNullable<Contact>;
     predictFixedPoint(other: FixedPoint): NonNullable<Contact>;
+    predictFixedCircle(other: FixedCircle): NonNullable<Contact>;
     predictFixedGate(other: FixedLine): NonNullable<Contact>;
     repel(other: SceneObject): void;
     repelMovingCircle(other: MovingCircle): void;
     repelFixedPoint(other: FixedPoint): void;
+    repelFixedCircle(other: FixedCircle): void;
     repelFixedGate(other: FixedLine): void;
 }
 export declare class FixedPoint implements SceneObject {
     readonly point: Readonly<Vector>;
     constructor(point: Readonly<Vector>);
+    wireframe(context: CanvasRenderingContext2D): void;
+}
+export declare class FixedCircle implements SceneObject {
+    readonly center: Readonly<Vector>;
+    readonly radius: number;
+    constructor(center: Readonly<Vector>, radius: number);
     wireframe(context: CanvasRenderingContext2D): void;
 }
 export declare class FixedLine implements SceneObject {

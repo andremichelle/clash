@@ -13,7 +13,7 @@ export declare class Scene {
     running: boolean;
     frame(xMin: number, yMin: number, xMax: number, yMax: number): Vector[];
     add(...objects: SceneObject[]): void;
-    addAll(composite: {
+    addComposite(composite: {
         objects: SceneObject[];
     }): void;
     step(remaining: number): void;

@@ -43,7 +43,7 @@ export class Scene {
         this.needsCompile = true
     }
 
-    addAll(composite: { objects: SceneObject[] }): void {
+    addComposite(composite: { objects: SceneObject[] }): void {
         composite.objects.forEach(object => this.add(object))
     }
 

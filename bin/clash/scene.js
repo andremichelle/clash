@@ -39,7 +39,7 @@ export class Scene {
         }
         this.needsCompile = true;
     }
-    addAll(composite) {
+    addComposite(composite) {
         composite.objects.forEach(object => this.add(object));
     }
     step(remaining) {
