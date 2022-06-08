@@ -66,9 +66,18 @@ const showProgress = (() => {
             cb.velocity.y = 1;
             const ga = new FixedLine(new Vector(0, 400), new Vector(500, 400));
             scene.add(ca, ga, cb);
+        },
+        () => {
+            const ca = new MovingCircle(16 * 16, 300.0, 300.0, 16);
+            const cb = new MovingCircle(32 * 32, 300.0, 600.0, 32);
+            const outer = new FixedCircle(new Vector(300, 500), 64);
+            const inner = new FixedCircle(new Vector(300, 500), 256, true);
+            ca.velocity.x = 0.5;
+            cb.velocity.y = 0.5;
+            scene.add(ca, cb, outer, inner);
         }
     ];
-    Scenes[0]();
+    Scenes[3]();
     const canvas = HTML.query('canvas');
     const labelTotalEnergy = HTML.query('#total-energy');
     const labelNumTests = HTML.query('#num-tests');

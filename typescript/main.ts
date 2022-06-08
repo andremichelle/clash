@@ -59,8 +59,8 @@ const showProgress = (() => {
                 .close()
                 .build())
             scene.add(new FixedCircle(new Vector(800, 400), 64))
-        },
-        () => {
+        }
+        , () => {
             const circleA = new MovingCircle(100.0, 300.0, 300.0, 32)
             const circleB = new MovingCircle(100.0, 500.0 - 32.0, 300.0, 32)
             const circleC = new MovingCircle(100.0, 500.0 + 32.0, 300.0, 32)
@@ -68,8 +68,8 @@ const showProgress = (() => {
             circleA.velocity.x = 1.5
             circleD.velocity.x = -1
             scene.add(circleA, circleB, circleC, circleD)
-        },
-        () => {
+        }
+        , () => {
             const ca = new MovingCircle(100.0, 100.0, 500.0, 32)
             const cb = new MovingCircle(100.0, 200.0, 300.0, 32)
             ca.velocity.y = -1
@@ -77,8 +77,17 @@ const showProgress = (() => {
             const ga = new FixedLine(new Vector(0, 400), new Vector(500, 400))
             scene.add(ca, ga, cb)
         }
+        , () => {
+            const ca = new MovingCircle(16 * 16, 300.0, 300.0, 16)
+            const cb = new MovingCircle(32 * 32, 300.0, 600.0, 32)
+            const outer = new FixedCircle(new Vector(300, 500), 64)
+            const inner = new FixedCircle(new Vector(300, 500), 256, true)
+            ca.velocity.x = 0.5
+            cb.velocity.y = 0.5
+            scene.add(ca, cb, outer, inner)
+        }
     ]
-    Scenes[0]()
+    Scenes[3]()
 
     // --- BOOT ENDS ---
     const canvas: HTMLCanvasElement = HTML.query('canvas')

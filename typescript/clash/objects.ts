@@ -64,7 +64,6 @@ export class MovingCircle extends MovingObject {
         const vx = other.velocity.x - this.velocity.x
         const vy = other.velocity.y - this.velocity.y
         const vs = vx * vx + vy * vy
-        if (vs == 0.0) return Contact.Never
         const ex = this.position.x - other.position.x
         const ey = this.position.y - other.position.y
         const ev = ex * vy - ey * vx
@@ -91,14 +90,14 @@ export class MovingCircle extends MovingObject {
     predictFixedCircle(other: FixedCircle): NonNullable<Contact> {
         const dx = other.center.x - this.position.x
         const dy = other.center.y - this.position.y
-        const rr = this.radius + other.radius
+        const rr = other.radius + this.radius * other.sign
         const vx = this.velocity.x
         const vy = this.velocity.y
         const vs = vx * vx + vy * vy
         const ev = dx * vy - dy * vx
         const sq = vs * rr * rr - ev * ev
         if (sq < 0.0) return Contact.Never
-        const when = -(Math.sqrt(sq) - dy * vy - dx * vx) / vs
+        const when = (-Math.sqrt(sq) * other.sign + dy * vy + dx * vx) / vs
         return Contact.create(when, this, other)
     }
 
@@ -153,7 +152,7 @@ export class MovingCircle extends MovingObject {
     }
 
     repelFixedCircle(other: FixedCircle): void {
-        const nn = this.radius + other.radius
+        const nn = (other.radius + this.radius * other.sign) * other.sign
         const nx = (this.position.x - other.center.x) / nn
         const ny = (this.position.y - other.center.y) / nn
         const e = 2.0 * (nx * this.velocity.x + ny * this.velocity.y)
@@ -187,7 +186,12 @@ export class FixedPoint implements SceneObject {
 }
 
 export class FixedCircle implements SceneObject {
-    constructor(readonly center: Readonly<Vector>, readonly radius: number) {
+    readonly sign: number
+
+    constructor(readonly center: Readonly<Vector>,
+                readonly radius: number,
+                inner: boolean = false) {
+        this.sign = inner ? -1 : 1
     }
 
     wireframe(context: CanvasRenderingContext2D): void {
@@ -197,7 +201,9 @@ export class FixedCircle implements SceneObject {
 }
 
 export class FixedLine implements SceneObject {
-    constructor(readonly p0: Readonly<Vector>, readonly p1: Readonly<Vector>, readonly gate: boolean = false) {
+    constructor(readonly p0: Readonly<Vector>,
+                readonly p1: Readonly<Vector>,
+                readonly gate: boolean = false) {
     }
 
     wireframe(context: CanvasRenderingContext2D): void {
