@@ -101,6 +101,8 @@ const showProgress = (() => {
 
     // console.log(JSON.stringify(scene.serialize()))
 
+    scene.deserialize(scene.serialize())
+
     // --- BOOT ENDS ---
     const canvas: HTMLCanvasElement = HTML.query('canvas')
     const labelTotalEnergy: HTMLCanvasElement = HTML.query('#total-energy')

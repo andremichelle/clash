@@ -88,6 +88,7 @@ const showProgress = (() => {
         }
     ];
     Scenes[0]();
+    scene.deserialize(scene.serialize());
     const canvas = HTML.query('canvas');
     const labelTotalEnergy = HTML.query('#total-energy');
     const labelNumTests = HTML.query('#num-tests');

@@ -371,6 +371,10 @@ export class ArrayUtils {
     // noinspection JSUnusedLocalSymbols
     private constructor() {
     }
+
+    static clear<T>(array: T[]): void {
+        array.splice(0, array.length)
+    }
 }
 
 export interface SettingsFormat<DATA> {

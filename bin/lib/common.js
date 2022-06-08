@@ -268,6 +268,9 @@ export class ArrayUtils {
             array[randomIndex] = element;
         }
     }
+    static clear(array) {
+        array.splice(0, array.length);
+    }
 }
 ArrayUtils.binarySearch = (array, length, key) => {
     let low = 0 | 0;

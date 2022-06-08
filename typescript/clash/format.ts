@@ -4,9 +4,7 @@ export type SceneFormat = {
     objects: SceneObjectFormat[]
 }
 
-export type SceneObjectFormat = {
-    class: 'moving-circle' | 'fixed-point' | 'fixed-circle' | 'fixed-line'
-}
+export type SceneObjectFormat = MovingCircleFormat | FixedPointFormat | FixedCircleFormat | FixedLineFormat
 
 export type MovingObjectFormat = {
     mass: number,
@@ -14,29 +12,33 @@ export type MovingObjectFormat = {
     py: number,
     vx: number,
     vy: number
-} & SceneObjectFormat
+}
 
 export type MovingCircleFormat = {
+    class: 'moving-circle',
     radius: number
 } & MovingObjectFormat
 
 export type FixedPointFormat = {
+    class: 'fixed-point',
     x: number,
     y: number
-} & SceneObjectFormat
+}
 
 export type FixedCircleFormat = {
+    class: 'fixed-circle',
     x: number,
     y: number,
     radius: number,
     outline: Outline,
     segment: [number, number]
-} & SceneObjectFormat
+}
 
 export type FixedLineFormat = {
+    class: 'fixed-line',
     x0: number,
     y0: number,
     x1: number,
     y1: number,
     gate: boolean
-} & SceneObjectFormat
+}

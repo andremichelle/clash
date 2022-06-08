@@ -30,6 +30,7 @@ export declare class Scene {
     applyForces(): void;
     integrate(time: number): void;
     wireframe(context: CanvasRenderingContext2D): void;
+    deserialize(format: SceneFormat): void;
     serialize(): SceneFormat;
     numTests: () => number;
     numObjects: () => number;

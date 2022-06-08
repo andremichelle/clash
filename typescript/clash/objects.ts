@@ -1,8 +1,22 @@
 import {TAU} from "../lib/math.js"
 import {Contact} from "./contact.js"
-import {FixedCircleFormat, FixedLineFormat, FixedPointFormat, MovingCircleFormat} from "./format.js"
+import {FixedCircleFormat, FixedLineFormat, FixedPointFormat, MovingCircleFormat, SceneObjectFormat} from "./format.js"
 import {SceneObject} from "./scene.js"
 import {Vector} from "./vector.js"
+
+export const decode = (format: SceneObjectFormat): SceneObject => {
+    switch (format.class) {
+        case 'moving-circle':
+            return new MovingCircle(format.mass, format.px, format.py, format.radius).setVelocity(format.vx, format.vy)
+        case 'fixed-point':
+            return new FixedPoint(new Vector(format.x, format.y))
+        case 'fixed-circle':
+            return new FixedCircle(new Vector(format.x, format.y), format.radius, format.outline, new CircleSegment(format.segment[0], format.segment[1]))
+        case 'fixed-line':
+            return new FixedLine(new Vector(format.x0, format.y0), new Vector(format.x1, format.y1), format.gate)
+    }
+    throw new Error(`Unknown format: ${format}`)
+}
 
 export abstract class MovingObject extends SceneObject {
     readonly inverseMass: number = this.mass === Number.POSITIVE_INFINITY ? 0.0 : 1.0 / this.mass
@@ -16,6 +30,12 @@ export abstract class MovingObject extends SceneObject {
         this.position = new Vector(x, y)
         this.velocity = new Vector(0.0, 0.0)
         this.force = new Vector(0.0, 0.0)
+    }
+
+    setVelocity(x: number, y: number): this {
+        this.velocity.x = x
+        this.velocity.y = y
+        return this
     }
 
     applyForces(): void {

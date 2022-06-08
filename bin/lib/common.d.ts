@@ -128,6 +128,7 @@ export declare class ArrayUtils {
     static shuffle(array: ArrayBufferLike, n: number, random: Random): void;
     static binarySearch: (array: ArrayBufferLike, length: number, key: number) => number;
     private constructor();
+    static clear<T>(array: T[]): void;
 }
 export interface SettingsFormat<DATA> {
     class: string;

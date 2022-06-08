@@ -1,5 +1,6 @@
+import { ArrayUtils } from "../lib/common.js";
 import { Contact } from "./contact.js";
-import { FixedLine, MovingCircle, MovingObject } from "./objects.js";
+import { decode, FixedLine, MovingCircle, MovingObject } from "./objects.js";
 import { Vector } from "./vector.js";
 export class SceneObject {
     proximate(nearest, object) {
@@ -114,6 +115,11 @@ export class Scene {
         this.fixedObjects.forEach(object => object.wireframe(context));
         context.strokeStyle = 'grey';
         context.stroke();
+    }
+    deserialize(format) {
+        ArrayUtils.clear(this.movingObjects);
+        ArrayUtils.clear(this.fixedObjects);
+        this.addComposite({ objects: format.objects.map(f => decode(f)) });
     }
     serialize() {
         return {
