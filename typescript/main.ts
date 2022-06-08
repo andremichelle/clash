@@ -101,7 +101,7 @@ const showProgress = (() => {
     const nextFrame = () => {
         scene.step(1000.0 / 60.0) // assume steady 60fps
         // scene.step(1)
-        labelTotalEnergy.textContent = scene.totalEnergy().toFixed(10)
+        labelTotalEnergy.textContent = scene.kineticEnergy().toFixed(10)
         labelNumTests.textContent = `${scene.numTests()}`
         labelNumObject.textContent = `${scene.numObjects()}`
 

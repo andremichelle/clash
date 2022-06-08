@@ -3,8 +3,12 @@ export class Vector {
         this.x = x;
         this.y = y;
     }
-    static create(a, b) {
+    static subtract(a, b) {
         return new Vector(b.x - a.x, b.y - a.y);
+    }
+    static normalized(v) {
+        const length = v.length();
+        return length > 0.0 ? new Vector(v.x / length, v.y / length) : v.clone();
     }
     zero() {
         this.x = 0.0;
@@ -21,14 +25,6 @@ export class Vector {
     scale(value) {
         this.x *= value;
         this.y *= value;
-    }
-    normalize() {
-        const length = this.length();
-        return length > 0.0 ? new Vector(this.x / length, this.y / length) : this.clone();
-    }
-    normal() {
-        const length = this.length();
-        return length > 0.0 ? new Vector(this.y / length, -this.x / length) : new Vector(this.y, -this.x);
     }
     clone() {
         return new Vector(this.x, this.y);

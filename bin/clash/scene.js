@@ -1,6 +1,22 @@
 import { Contact } from "./contact.js";
-import { FixedLine, MovingObject } from "./objects.js";
+import { FixedLine, MovingCircle, MovingObject } from "./objects.js";
 import { Vector } from "./vector.js";
+export class SceneObject {
+    predictMovingObject(object) {
+        if (object instanceof MovingCircle) {
+            return this.predictMovingCircle(object);
+        }
+        throw new Error(`Unknown MovingObject(${object.constructor.name})`);
+    }
+    repelMovingObject(object) {
+        if (object instanceof MovingCircle) {
+            this.repelMovingCircle(object);
+        }
+        else {
+            throw new Error(`Unknown MovingObject(${object.constructor.name})`);
+        }
+    }
+}
 export class Scene {
     constructor() {
         this.fixedObjects = [];
@@ -10,9 +26,9 @@ export class Scene {
         this.running = true;
         this.numTests = () => this.testPairs.length;
         this.numObjects = () => this.movingObjects.length + this.fixedObjects.length;
-        this.totalEnergy = () => this.movingObjects.reduce((energy, object) => {
+        this.kineticEnergy = () => this.movingObjects.reduce((energy, object) => {
             const squared = object.velocity.dot();
-            return squared === 0.0 ? energy : energy + squared * object.mass;
+            return squared === 0.0 || object.inverseMass === 0.0 ? energy : energy + squared * object.mass;
         }, 0.0) * 0.5;
     }
     frame(xMin, yMin, xMax, yMax) {
@@ -72,7 +88,7 @@ export class Scene {
         this.needsCompile = false;
     }
     nextContact() {
-        return this.testPairs.reduce((nearest, pair) => Contact.proximate(nearest, pair[0].predict(pair[1])), Contact.Never);
+        return this.testPairs.reduce((nearest, pair) => Contact.proximate(nearest, pair[1].predictMovingObject(pair[0])), Contact.Never);
     }
     applyForces() {
         this.movingObjects.forEach(moving => moving.applyForces());

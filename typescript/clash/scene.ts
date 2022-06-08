@@ -127,8 +127,8 @@ export class Scene {
 
     numObjects = (): number => this.movingObjects.length + this.fixedObjects.length
 
-    totalEnergy = (): number => this.movingObjects.reduce((energy: number, object: MovingObject) => {
+    kineticEnergy = (): number => this.movingObjects.reduce((energy: number, object: MovingObject) => {
         const squared = object.velocity.dot()
-        return squared === 0.0 ? energy : energy + squared * object.mass
+        return squared === 0.0 || object.inverseMass === 0.0 ? energy : energy + squared * object.mass
     }, 0.0) * 0.5
 }

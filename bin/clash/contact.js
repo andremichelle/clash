@@ -14,7 +14,7 @@ export class Contact {
             ? other : current;
     }
     repel() {
-        this.moving.repel(this.other);
+        this.other.repelMovingObject(this.moving);
     }
 }
 Contact.MIN_TIME_THRESHOLD = -.015625;

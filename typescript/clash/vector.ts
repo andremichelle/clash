@@ -1,6 +1,11 @@
 export class Vector {
-    static create(a: Vector, b: Vector): Vector {
+    static subtract(a: Vector, b: Vector): Vector {
         return new Vector(b.x - a.x, b.y - a.y)
+    }
+
+    static normalized(v: Vector): Vector {
+        const length = v.length()
+        return length > 0.0 ? new Vector(v.x / length, v.y / length) : v.clone()
     }
 
     constructor(public x: number = 0.0, public y: number = 0.0) {
@@ -24,16 +29,6 @@ export class Vector {
     scale(value: number): void {
         this.x *= value
         this.y *= value
-    }
-
-    normalize(): Vector {
-        const length = this.length()
-        return length > 0.0 ? new Vector(this.x / length, this.y / length) : this.clone()
-    }
-
-    normal(): Vector {
-        const length = this.length()
-        return length > 0.0 ? new Vector(this.y / length, -this.x / length) : new Vector(this.y, -this.x)
     }
 
     clone(): Vector {

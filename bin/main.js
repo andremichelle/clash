@@ -88,7 +88,7 @@ const showProgress = (() => {
     const context = canvas.getContext('2d');
     const nextFrame = () => {
         scene.step(1000.0 / 60.0);
-        labelTotalEnergy.textContent = scene.totalEnergy().toFixed(10);
+        labelTotalEnergy.textContent = scene.kineticEnergy().toFixed(10);
         labelNumTests.textContent = `${scene.numTests()}`;
         labelNumObject.textContent = `${scene.numObjects()}`;
         const w = canvas.clientWidth;

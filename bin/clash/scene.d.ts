@@ -29,5 +29,5 @@ export declare class Scene {
     wireframe(context: CanvasRenderingContext2D): void;
     numTests: () => number;
     numObjects: () => number;
-    totalEnergy: () => number;
+    kineticEnergy: () => number;
 }
