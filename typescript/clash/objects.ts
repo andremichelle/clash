@@ -1,5 +1,6 @@
 import {TAU} from "../lib/math.js"
 import {Contact} from "./contact.js"
+import {FixedCircleFormat, FixedLineFormat, FixedPointFormat, MovingCircleFormat} from "./format.js"
 import {SceneObject} from "./scene.js"
 import {Vector} from "./vector.js"
 
@@ -76,6 +77,18 @@ export class MovingCircle extends MovingObject {
         other.velocity.x += ex * other.inverseMass
         other.velocity.y += ey * other.inverseMass
     }
+
+    serialize(): MovingCircleFormat {
+        return {
+            class: "moving-circle",
+            mass: this.mass,
+            px: this.position.x,
+            py: this.position.y,
+            vx: this.velocity.x,
+            vy: this.velocity.y,
+            radius: this.radius
+        }
+    }
 }
 
 export class FixedPoint extends SceneObject {
@@ -110,6 +123,14 @@ export class FixedPoint extends SceneObject {
         circle.velocity.x -= nx * e
         circle.velocity.y -= ny * e
     }
+
+    serialize(): FixedPointFormat {
+        return {
+            class: "fixed-point",
+            x: this.point.x,
+            y: this.point.y
+        }
+    }
 }
 
 export enum Outline {
@@ -120,11 +141,12 @@ export class CircleSegment {
     static Full = new CircleSegment(0.0, TAU)
 
     constructor(readonly angleMin: number, readonly angleRange: number) {
+        console.assert(0.0 < angleMin && angleMin < TAU && 0.0 < angleRange && angleRange < TAU)
     }
 }
 
 export class FixedCircle extends SceneObject {
-    constructor(readonly center: Readonly<Vector>,
+    constructor(readonly point: Readonly<Vector>,
                 readonly radius: number,
                 readonly outline = Outline.Both,
                 readonly segment: CircleSegment = CircleSegment.Full) {
@@ -133,11 +155,11 @@ export class FixedCircle extends SceneObject {
 
     wireframe(context: CanvasRenderingContext2D): void {
         if (this.segment === CircleSegment.Full) {
-            context.moveTo(this.center.x + this.radius, this.center.y)
-            context.arc(this.center.x, this.center.y, this.radius, 0.0, TAU)
+            context.moveTo(this.point.x + this.radius, this.point.y)
+            context.arc(this.point.x, this.point.y, this.radius, 0.0, TAU)
         } else {
-            context.moveTo(this.center.x + Math.cos(this.segment.angleMin) * this.radius, this.center.y + Math.sin(this.segment.angleMin) * this.radius)
-            context.arc(this.center.x, this.center.y, this.radius, this.segment.angleMin, this.segment.angleMin + this.segment.angleRange)
+            context.moveTo(this.point.x + Math.cos(this.segment.angleMin) * this.radius, this.point.y + Math.sin(this.segment.angleMin) * this.radius)
+            context.arc(this.point.x, this.point.y, this.radius, this.segment.angleMin, this.segment.angleMin + this.segment.angleRange)
         }
     }
 
@@ -157,8 +179,8 @@ export class FixedCircle extends SceneObject {
     }
 
     proximateMovingCircleSigned(nearest: Contact, circle: MovingCircle, sign: number): NonNullable<Contact> {
-        const dx = this.center.x - circle.position.x
-        const dy = this.center.y - circle.position.y
+        const dx = this.point.x - circle.position.x
+        const dy = this.point.y - circle.position.y
         const rr = circle.radius + this.radius * sign
         const vx = circle.velocity.x
         const vy = circle.velocity.y
@@ -170,8 +192,8 @@ export class FixedCircle extends SceneObject {
         if (this.segment === CircleSegment.Full) {
             return Contact.compare(nearest, when, circle, this)
         }
-        const px = circle.position.x + circle.velocity.x * when - this.center.x
-        const py = circle.position.y + circle.velocity.y * when - this.center.y
+        const px = circle.position.x + circle.velocity.x * when - this.point.x
+        const py = circle.position.y + circle.velocity.y * when - this.point.y
         let angle = Math.atan2(py, px) - this.segment.angleMin
         while (angle < 0.0) angle += TAU
         if (angle >= this.segment.angleRange) {
@@ -181,14 +203,25 @@ export class FixedCircle extends SceneObject {
     }
 
     repelMovingCircle(circle: MovingCircle): void {
-        const dx = circle.position.x - this.center.x
-        const dy = circle.position.y - this.center.y
+        const dx = circle.position.x - this.point.x
+        const dy = circle.position.y - this.point.y
         const dd = Math.sqrt(dx * dx + dy * dy)
         const nx = dx / dd
         const ny = dy / dd
         const e = 2.0 * (nx * circle.velocity.x + ny * circle.velocity.y)
         circle.velocity.x -= nx * e
         circle.velocity.y -= ny * e
+    }
+
+    serialize(): FixedCircleFormat {
+        return {
+            class: "fixed-circle",
+            x: this.point.x,
+            y: this.point.y,
+            radius: this.radius,
+            outline: this.outline,
+            segment: [this.segment.angleMin, this.segment.angleRange]
+        }
     }
 }
 
@@ -239,5 +272,16 @@ export class FixedLine extends SceneObject {
         const e = 2.0 * (nx * circle.velocity.x + ny * circle.velocity.y)
         circle.velocity.x -= nx * e
         circle.velocity.y -= ny * e
+    }
+
+    serialize(): FixedLineFormat {
+        return {
+            class: "fixed-line",
+            x0: this.p0.x,
+            y0: this.p0.y,
+            x1: this.p1.x,
+            y1: this.p1.y,
+            gate: this.gate
+        }
     }
 }

@@ -108,6 +108,11 @@ export class Scene {
         context.strokeStyle = 'grey';
         context.stroke();
     }
+    serialize() {
+        return {
+            objects: [...this.movingObjects, ...this.fixedObjects].map(o => o.serialize())
+        };
+    }
 }
 Scene.REMAINING_THRESHOLD = 1e-7;
 Scene.MAX_ITERATIONS = 10000;

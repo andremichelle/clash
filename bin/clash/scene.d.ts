@@ -1,9 +1,11 @@
 import { Contact } from "./contact.js";
+import { SceneFormat, SceneObjectFormat } from "./format.js";
 import { MovingCircle, MovingObject } from "./objects.js";
 import { Vector } from "./vector.js";
 export declare abstract class SceneObject {
     proximate(nearest: Contact, object: MovingObject): NonNullable<Contact>;
     repelMovingObject(object: MovingObject): void;
+    abstract serialize(): SceneObjectFormat;
     abstract wireframe(context: CanvasRenderingContext2D): void;
     abstract proximateMovingCircle(nearest: Contact, circle: MovingCircle): NonNullable<Contact>;
     abstract repelMovingCircle(circle: MovingCircle): void;
@@ -27,6 +29,7 @@ export declare class Scene {
     applyForces(): void;
     integrate(time: number): void;
     wireframe(context: CanvasRenderingContext2D): void;
+    serialize(): SceneFormat;
     numTests: () => number;
     numObjects: () => number;
     kineticEnergy: () => number;

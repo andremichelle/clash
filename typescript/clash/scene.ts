@@ -1,4 +1,5 @@
 import {Contact} from "./contact.js"
+import {SceneFormat, SceneObjectFormat} from "./format.js"
 import {FixedLine, MovingCircle, MovingObject} from "./objects.js"
 import {Vector} from "./vector.js"
 
@@ -17,6 +18,8 @@ export abstract class SceneObject {
             throw new Error(`Unknown MovingObject(${object.constructor.name})`)
         }
     }
+
+    abstract serialize(): SceneObjectFormat
 
     abstract wireframe(context: CanvasRenderingContext2D): void
 
@@ -121,6 +124,12 @@ export class Scene {
         this.fixedObjects.forEach(object => object.wireframe(context))
         context.strokeStyle = 'grey'
         context.stroke()
+    }
+
+    serialize(): SceneFormat {
+        return {
+            objects: [...this.movingObjects, ...this.fixedObjects].map(o => o.serialize())
+        }
     }
 
     numTests = (): number => this.testPairs.length

@@ -5,8 +5,8 @@ export class Contact {
         this.other = other;
         Contact.instanceCount++;
     }
-    static compare(closest, when, object, other) {
-        return when >= Contact.MIN_TIME_THRESHOLD && when < closest.when ? new Contact(when, object, other) : closest;
+    static compare(nearest, when, object, other) {
+        return when >= Contact.MIN_TIME_THRESHOLD && when < nearest.when ? new Contact(when, object, other) : nearest;
     }
     static proximate(current, other) {
         return other === Contact.Never
