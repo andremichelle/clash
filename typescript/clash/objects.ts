@@ -3,13 +3,15 @@ import {Contact} from "./contact.js"
 import {SceneObject} from "./scene.js"
 import {Vector} from "./vector.js"
 
-export abstract class MovingObject implements SceneObject {
+export abstract class MovingObject extends SceneObject {
     readonly inverseMass: number = this.mass === Number.POSITIVE_INFINITY ? 0.0 : 1.0 / this.mass
     readonly position: Vector // center of mass
     readonly velocity: Vector
     readonly force: Vector
 
     protected constructor(readonly mass: number, x: number = 0.0, y: number = 0.0) {
+        super()
+
         this.position = new Vector(x, y)
         this.velocity = new Vector(0.0, 0.0)
         this.force = new Vector(0.0, 0.0)
@@ -32,11 +34,9 @@ export abstract class MovingObject implements SceneObject {
 
     abstract wireframe(context: CanvasRenderingContext2D): void
 
-    abstract predict(other: SceneObject): NonNullable<Contact>
-
     abstract predictMovingCircle(other: MovingCircle): NonNullable<Contact>
 
-    abstract repel(other: SceneObject): void
+    abstract repelMovingCircle(circle: MovingCircle): void
 }
 
 export class MovingCircle extends MovingObject {
@@ -47,10 +47,6 @@ export class MovingCircle extends MovingObject {
     wireframe(context: CanvasRenderingContext2D): void {
         context.moveTo(this.position.x + this.radius, this.position.y)
         context.arc(this.position.x, this.position.y, this.radius, 0.0, TAU)
-    }
-
-    predict(other: SceneObject): NonNullable<Contact> {
-        return other.predictMovingCircle(this)
     }
 
     predictMovingCircle(other: MovingCircle): NonNullable<Contact> {
@@ -67,20 +63,6 @@ export class MovingCircle extends MovingObject {
         return Contact.create(when, this, other)
     }
 
-    repel(other: SceneObject): void {
-        if (other instanceof MovingCircle) {
-            this.repelMovingCircle(other)
-        } else if (other instanceof FixedPoint) {
-            this.repelFixedPoint(other)
-        } else if (other instanceof FixedCircle) {
-            this.repelFixedCircle(other)
-        } else if (other instanceof FixedLine) {
-            this.repelFixedGate(other)
-        } else {
-            throw new Error(`No strategy for repelling ${other.constructor.name}`)
-        }
-    }
-
     repelMovingCircle(other: MovingCircle): void {
         const distance = this.radius + other.radius
         const nx = (this.position.x - other.position.x) / distance
@@ -94,44 +76,15 @@ export class MovingCircle extends MovingObject {
         other.velocity.x += ex * other.inverseMass
         other.velocity.y += ey * other.inverseMass
     }
-
-    repelFixedPoint(other: FixedPoint): void {
-        const nx = (this.position.x - other.point.x) / this.radius
-        const ny = (this.position.y - other.point.y) / this.radius
-        const e = 2.0 * (nx * this.velocity.x + ny * this.velocity.y)
-        this.velocity.x -= nx * e
-        this.velocity.y -= ny * e
-    }
-
-    repelFixedCircle(other: FixedCircle): void {
-        const dx = this.position.x - other.center.x
-        const dy = this.position.y - other.center.y
-        const dd = Math.sqrt(dx * dx + dy * dy)
-        const nx = dx / dd
-        const ny = dy / dd
-        const e = 2.0 * (nx * this.velocity.x + ny * this.velocity.y)
-        this.velocity.x -= nx * e
-        this.velocity.y -= ny * e
-    }
-
-    repelFixedGate(other: FixedLine): void {
-        const dx = other.p1.x - other.p0.x
-        const dy = other.p1.y - other.p0.y
-        const dd = Math.sqrt(dx * dx + dy * dy)
-        const nx = dy / dd
-        const ny = -dx / dd
-        const e = 2.0 * (nx * this.velocity.x + ny * this.velocity.y)
-        this.velocity.x -= nx * e
-        this.velocity.y -= ny * e
-    }
 }
 
 export enum Outline {
     Both = 'both', Positive = 'positive', Negative = 'negative'
 }
 
-export class FixedPoint implements SceneObject {
+export class FixedPoint extends SceneObject {
     constructor(readonly point: Readonly<Vector>) {
+        super()
     }
 
     wireframe(context: CanvasRenderingContext2D): void {
@@ -142,24 +95,33 @@ export class FixedPoint implements SceneObject {
         context.lineTo(this.point.x - radius, this.point.y + radius)
     }
 
-    predictMovingCircle(other: MovingCircle): NonNullable<Contact> {
-        const dx = this.point.x - other.position.x
-        const dy = this.point.y - other.position.y
-        const vx = other.velocity.x
-        const vy = other.velocity.y
+    predictMovingCircle(circle: MovingCircle): NonNullable<Contact> {
+        const dx = this.point.x - circle.position.x
+        const dy = this.point.y - circle.position.y
+        const vx = circle.velocity.x
+        const vy = circle.velocity.y
         const vs = vx * vx + vy * vy
         const ev = dx * vy - dy * vx
-        const sq = vs * other.radius * other.radius - ev * ev
+        const sq = vs * circle.radius * circle.radius - ev * ev
         if (sq < 0.0) return Contact.Never
         const when = -(Math.sqrt(sq) - dy * vy - dx * vx) / vs
-        return Contact.create(when, other, this)
+        return Contact.create(when, circle, this)
+    }
+
+    repelMovingCircle(circle: MovingCircle): void {
+        const nx = (circle.position.x - this.point.x) / circle.radius
+        const ny = (circle.position.y - this.point.y) / circle.radius
+        const e = 2.0 * (nx * circle.velocity.x + ny * circle.velocity.y)
+        circle.velocity.x -= nx * e
+        circle.velocity.y -= ny * e
     }
 }
 
-export class FixedCircle implements SceneObject {
+export class FixedCircle extends SceneObject {
     constructor(readonly center: Readonly<Vector>,
                 readonly radius: number,
                 readonly outline = Outline.Both) {
+        super()
     }
 
     wireframe(context: CanvasRenderingContext2D): void {
@@ -167,40 +129,52 @@ export class FixedCircle implements SceneObject {
         context.arc(this.center.x, this.center.y, this.radius, 0.0, TAU)
     }
 
-    predictMovingCircle(other: MovingCircle): NonNullable<Contact> {
+    predictMovingCircle(circle: MovingCircle): NonNullable<Contact> {
         switch (this.outline) {
             case Outline.Both:
                 return Contact.proximate(
-                    this.predictMovingCircleSigned(other, 1),
-                    this.predictMovingCircleSigned(other, -1))
+                    this.predictMovingCircleSigned(circle, 1),
+                    this.predictMovingCircleSigned(circle, -1))
             case Outline.Positive:
-                return this.predictMovingCircleSigned(other, 1)
+                return this.predictMovingCircleSigned(circle, 1)
             case Outline.Negative:
-                return this.predictMovingCircleSigned(other, -1)
+                return this.predictMovingCircleSigned(circle, -1)
             default:
                 throw new Error('unknown type')
         }
     }
 
-    predictMovingCircleSigned(other: MovingCircle, sign: number): NonNullable<Contact> {
-        const dx = this.center.x - other.position.x
-        const dy = this.center.y - other.position.y
-        const rr = other.radius + this.radius * sign
-        const vx = other.velocity.x
-        const vy = other.velocity.y
+    predictMovingCircleSigned(circle: MovingCircle, sign: number): NonNullable<Contact> {
+        const dx = this.center.x - circle.position.x
+        const dy = this.center.y - circle.position.y
+        const rr = circle.radius + this.radius * sign
+        const vx = circle.velocity.x
+        const vy = circle.velocity.y
         const vs = vx * vx + vy * vy
         const ev = dx * vy - dy * vx
         const sq = vs * rr * rr - ev * ev
         if (sq < 0.0) return Contact.Never
         const when = (-Math.sqrt(sq) * sign + dy * vy + dx * vx) / vs
-        return Contact.create(when, other, this)
+        return Contact.create(when, circle, this)
+    }
+
+    repelMovingCircle(circle: MovingCircle): void {
+        const dx = circle.position.x - this.center.x
+        const dy = circle.position.y - this.center.y
+        const dd = Math.sqrt(dx * dx + dy * dy)
+        const nx = dx / dd
+        const ny = dy / dd
+        const e = 2.0 * (nx * circle.velocity.x + ny * circle.velocity.y)
+        circle.velocity.x -= nx * e
+        circle.velocity.y -= ny * e
     }
 }
 
-export class FixedLine implements SceneObject {
+export class FixedLine extends SceneObject {
     constructor(readonly p0: Readonly<Vector>,
                 readonly p1: Readonly<Vector>,
                 readonly gate: boolean = false) {
+        super()
     }
 
     wireframe(context: CanvasRenderingContext2D): void {
@@ -221,17 +195,28 @@ export class FixedLine implements SceneObject {
         }
     }
 
-    predictMovingCircle(other: MovingCircle): NonNullable<Contact> {
+    predictMovingCircle(circle: MovingCircle): NonNullable<Contact> {
         const dx = this.p1.x - this.p0.x
         const dy = this.p1.y - this.p0.y
-        const ud = other.velocity.y * dx - other.velocity.x * dy
+        const ud = circle.velocity.y * dx - circle.velocity.x * dy
         if (this.gate && ud <= 0) return Contact.Never // only one direction
         const dd = Math.sqrt(dx * dx + dy * dy) * Math.sign(ud)
-        const px = (other.position.x - this.p0.x) - dy / dd * other.radius
-        const py = (other.position.y - this.p0.y) + dx / dd * other.radius
-        const ua = (other.velocity.y * px - other.velocity.x * py) / ud
+        const px = (circle.position.x - this.p0.x) - dy / dd * circle.radius
+        const py = (circle.position.y - this.p0.y) + dx / dd * circle.radius
+        const ua = (circle.velocity.y * px - circle.velocity.x * py) / ud
         if (ua < 0.0 || ua > 1.0) return Contact.Never
         const when = (dy * px - dx * py) / ud
-        return Contact.create(when, other, this)
+        return Contact.create(when, circle, this)
+    }
+
+    repelMovingCircle(circle: MovingCircle): void {
+        const dx = this.p1.x - this.p0.x
+        const dy = this.p1.y - this.p0.y
+        const dd = Math.sqrt(dx * dx + dy * dy)
+        const nx = dy / dd
+        const ny = -dx / dd
+        const e = 2.0 * (nx * circle.velocity.x + ny * circle.velocity.y)
+        circle.velocity.x -= nx * e
+        circle.velocity.y -= ny * e
     }
 }

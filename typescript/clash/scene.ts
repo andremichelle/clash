@@ -2,10 +2,27 @@ import {Contact} from "./contact.js"
 import {FixedLine, MovingCircle, MovingObject} from "./objects.js"
 import {Vector} from "./vector.js"
 
-export interface SceneObject {
-    wireframe(context: CanvasRenderingContext2D): void
+export abstract class SceneObject {
+    predictMovingObject(object: MovingObject): NonNullable<Contact> {
+        if (object instanceof MovingCircle) {
+            return this.predictMovingCircle(object)
+        }
+        throw new Error(`Unknown MovingObject(${object.constructor.name})`)
+    }
 
-    predictMovingCircle(other: MovingCircle): NonNullable<Contact>
+    repelMovingObject(object: MovingObject): void {
+        if (object instanceof MovingCircle) {
+            this.repelMovingCircle(object)
+        } else {
+            throw new Error(`Unknown MovingObject(${object.constructor.name})`)
+        }
+    }
+
+    abstract wireframe(context: CanvasRenderingContext2D): void
+
+    abstract predictMovingCircle(circle: MovingCircle): NonNullable<Contact>
+
+    abstract repelMovingCircle(circle: MovingCircle): void
 }
 
 export class Scene {
@@ -82,7 +99,7 @@ export class Scene {
 
     nextContact(): Contact {
         return this.testPairs.reduce((nearest: Contact, pair: [MovingObject, SceneObject]) =>
-            Contact.proximate(nearest, pair[0].predict(pair[1])), Contact.Never)
+            Contact.proximate(nearest, pair[1].predictMovingObject(pair[0])), Contact.Never)
     }
 
     applyForces() {

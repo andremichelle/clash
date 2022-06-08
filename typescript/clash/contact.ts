@@ -23,6 +23,6 @@ export class Contact {
     }
 
     repel(): void {
-        this!.moving.repel(this!.other)
+        this!.other.repelMovingObject(this!.moving)
     }
 }
