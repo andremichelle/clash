@@ -26,6 +26,12 @@ export declare enum Outline {
     Positive = "positive",
     Negative = "negative"
 }
+export declare class Segment {
+    readonly angleMin: number;
+    readonly angleRange: number;
+    static Full: Segment;
+    constructor(angleMin: number, angleRange: number);
+}
 export declare class FixedPoint extends SceneObject {
     readonly point: Readonly<Vector>;
     constructor(point: Readonly<Vector>);
@@ -37,7 +43,8 @@ export declare class FixedCircle extends SceneObject {
     readonly center: Readonly<Vector>;
     readonly radius: number;
     readonly outline: Outline;
-    constructor(center: Readonly<Vector>, radius: number, outline?: Outline);
+    readonly segment: Segment;
+    constructor(center: Readonly<Vector>, radius: number, outline?: Outline, segment?: Segment);
     wireframe(context: CanvasRenderingContext2D): void;
     predictMovingCircle(circle: MovingCircle): NonNullable<Contact>;
     predictMovingCircleSigned(circle: MovingCircle, sign: number): NonNullable<Contact>;

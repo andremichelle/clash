@@ -66,6 +66,13 @@ export var Outline;
     Outline["Positive"] = "positive";
     Outline["Negative"] = "negative";
 })(Outline || (Outline = {}));
+export class Segment {
+    constructor(angleMin, angleRange) {
+        this.angleMin = angleMin;
+        this.angleRange = angleRange;
+    }
+}
+Segment.Full = new Segment(0.0, TAU);
 export class FixedPoint extends SceneObject {
     constructor(point) {
         super();
@@ -100,15 +107,22 @@ export class FixedPoint extends SceneObject {
     }
 }
 export class FixedCircle extends SceneObject {
-    constructor(center, radius, outline = Outline.Both) {
+    constructor(center, radius, outline = Outline.Both, segment = Segment.Full) {
         super();
         this.center = center;
         this.radius = radius;
         this.outline = outline;
+        this.segment = segment;
     }
     wireframe(context) {
-        context.moveTo(this.center.x + this.radius, this.center.y);
-        context.arc(this.center.x, this.center.y, this.radius, 0.0, TAU);
+        if (this.segment === Segment.Full) {
+            context.moveTo(this.center.x + this.radius, this.center.y);
+            context.arc(this.center.x, this.center.y, this.radius, 0.0, TAU);
+        }
+        else {
+            context.moveTo(this.center.x + Math.cos(this.segment.angleMin) * this.radius, this.center.y + Math.sin(this.segment.angleMin) * this.radius);
+            context.arc(this.center.x, this.center.y, this.radius, this.segment.angleMin, this.segment.angleMin + this.segment.angleRange);
+        }
     }
     predictMovingCircle(circle) {
         switch (this.outline) {
@@ -134,6 +148,17 @@ export class FixedCircle extends SceneObject {
         if (sq < 0.0)
             return Contact.Never;
         const when = (-Math.sqrt(sq) * sign + dy * vy + dx * vx) / vs;
+        if (this.segment === Segment.Full) {
+            return Contact.create(when, circle, this);
+        }
+        const px = circle.position.x + circle.velocity.x * when - this.center.x;
+        const py = circle.position.y + circle.velocity.y * when - this.center.y;
+        let angle = Math.atan2(py, px) - this.segment.angleMin;
+        while (angle < 0.0)
+            angle += TAU;
+        if (angle >= this.segment.angleRange) {
+            return Contact.Never;
+        }
         return Contact.create(when, circle, this);
     }
     repelMovingCircle(circle) {

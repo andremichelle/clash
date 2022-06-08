@@ -8,7 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { FixedPolygonBuilder } from "./clash/composite.js";
-import { FixedCircle, FixedLine, MovingCircle } from "./clash/objects.js";
+import { FixedCircle, FixedLine, MovingCircle, Outline, Segment } from "./clash/objects.js";
 import { Scene } from "./clash/scene.js";
 import { Vector } from "./clash/vector.js";
 import { Boot, preloadImagesOfCssFile } from "./lib/boot.js";
@@ -78,9 +78,16 @@ const showProgress = (() => {
             cc.velocity.x = 0.5;
             cc.velocity.y = 1.5;
             scene.add(ca, cb, cc, outer, inner);
+        },
+        () => {
+            const moving = new MovingCircle(16 * 16, 400.0, 300.0, 16);
+            const fixed = new FixedCircle(new Vector(400, 500), 256, Outline.Both, new Segment(Math.PI, Math.PI));
+            moving.velocity.x = 1.5;
+            moving.velocity.y = 0.5;
+            scene.add(moving, fixed);
         }
     ];
-    Scenes[3]();
+    Scenes[4]();
     const canvas = HTML.query('canvas');
     const labelTotalEnergy = HTML.query('#total-energy');
     const labelNumTests = HTML.query('#num-tests');
