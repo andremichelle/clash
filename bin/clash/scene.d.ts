@@ -1,7 +1,9 @@
 import { Contact } from "./contact.js";
+import { MovingCircle } from "./objects.js";
 import { Vector } from "./vector.js";
 export interface SceneObject {
     wireframe(context: CanvasRenderingContext2D): void;
+    predictMovingCircle(other: MovingCircle): NonNullable<Contact>;
 }
 export declare class Scene {
     private static readonly REMAINING_THRESHOLD;

@@ -1,9 +1,11 @@
 import {Contact} from "./contact.js"
-import {FixedLine, MovingObject} from "./objects.js"
+import {FixedLine, MovingCircle, MovingObject} from "./objects.js"
 import {Vector} from "./vector.js"
 
 export interface SceneObject {
     wireframe(context: CanvasRenderingContext2D): void
+
+    predictMovingCircle(other: MovingCircle): NonNullable<Contact>
 }
 
 export class Scene {
@@ -72,7 +74,7 @@ export class Scene {
     compile(): void {
         this.testPairs.splice(0, this.testPairs.length, ...this.movingObjects
             .reduce((pairs: [MovingObject, SceneObject][], movingObject: MovingObject, index: number) => pairs
-                .concat(this.movingObjects.slice(index + 1).map(other => [movingObject, other as SceneObject])), this.movingObjects
+                .concat(this.movingObjects.slice(index + 1).map(other => [movingObject, other])), this.movingObjects
                 .reduce((pairs: [MovingObject, SceneObject][], movingObject: MovingObject) => pairs
                     .concat(this.fixedObjects.map(other => [movingObject, other])), [])))
         this.needsCompile = false

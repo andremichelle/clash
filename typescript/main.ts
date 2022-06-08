@@ -80,11 +80,14 @@ const showProgress = (() => {
         , () => {
             const ca = new MovingCircle(16 * 16, 300.0, 300.0, 16)
             const cb = new MovingCircle(32 * 32, 300.0, 600.0, 32)
+            const cc = new MovingCircle(32 * 32, 200.0, 200.0, 32)
             const outer = new FixedCircle(new Vector(300, 500), 64)
-            const inner = new FixedCircle(new Vector(300, 500), 256, true)
+            const inner = new FixedCircle(new Vector(300, 500), 256)
             ca.velocity.x = 0.5
             cb.velocity.y = 0.5
-            scene.add(ca, cb, outer, inner)
+            cc.velocity.x = 0.5
+            cc.velocity.y = 1.5
+            scene.add(ca, cb, cc, outer, inner)
         }
     ]
     Scenes[3]()

@@ -31,26 +31,12 @@ export class MovingCircle extends MovingObject {
         context.arc(this.position.x, this.position.y, this.radius, 0.0, TAU);
     }
     predict(other) {
-        if (other instanceof MovingCircle) {
-            return this.predictMovingCircle(other);
-        }
-        else if (other instanceof FixedPoint) {
-            return this.predictFixedPoint(other);
-        }
-        else if (other instanceof FixedCircle) {
-            return this.predictFixedCircle(other);
-        }
-        else if (other instanceof FixedLine) {
-            return this.predictFixedGate(other);
-        }
-        throw new Error(`No strategy for predicting ${other.constructor.name}`);
+        return other.predictMovingCircle(this);
     }
     predictMovingCircle(other) {
         const vx = other.velocity.x - this.velocity.x;
         const vy = other.velocity.y - this.velocity.y;
         const vs = vx * vx + vy * vy;
-        if (vs == 0.0)
-            return Contact.Never;
         const ex = this.position.x - other.position.x;
         const ey = this.position.y - other.position.y;
         const ev = ex * vy - ey * vx;
@@ -59,48 +45,6 @@ export class MovingCircle extends MovingObject {
         if (sq < 0.0)
             return Contact.Never;
         const when = -(Math.sqrt(sq) - ey * vy - ex * vx) / vs;
-        return Contact.create(when, this, other);
-    }
-    predictFixedPoint(other) {
-        const dx = other.point.x - this.position.x;
-        const dy = other.point.y - this.position.y;
-        const vx = this.velocity.x;
-        const vy = this.velocity.y;
-        const vs = vx * vx + vy * vy;
-        const ev = dx * vy - dy * vx;
-        const sq = vs * this.radius * this.radius - ev * ev;
-        if (sq < 0.0)
-            return Contact.Never;
-        const when = -(Math.sqrt(sq) - dy * vy - dx * vx) / vs;
-        return Contact.create(when, this, other);
-    }
-    predictFixedCircle(other) {
-        const dx = other.center.x - this.position.x;
-        const dy = other.center.y - this.position.y;
-        const rr = this.radius + other.radius;
-        const vx = this.velocity.x;
-        const vy = this.velocity.y;
-        const vs = vx * vx + vy * vy;
-        const ev = dx * vy - dy * vx;
-        const sq = vs * rr * rr - ev * ev;
-        if (sq < 0.0)
-            return Contact.Never;
-        const when = -(Math.sqrt(sq) - dy * vy - dx * vx) / vs;
-        return Contact.create(when, this, other);
-    }
-    predictFixedGate(other) {
-        const dx = other.p1.x - other.p0.x;
-        const dy = other.p1.y - other.p0.y;
-        const ud = this.velocity.y * dx - this.velocity.x * dy;
-        if (other.gate && ud <= 0)
-            return Contact.Never;
-        const dd = Math.sqrt(dx * dx + dy * dy) * Math.sign(ud);
-        const px = (this.position.x - other.p0.x) - dy / dd * this.radius;
-        const py = (this.position.y - other.p0.y) + dx / dd * this.radius;
-        const ua = (this.velocity.y * px - this.velocity.x * py) / ud;
-        if (ua < 0.0 || ua > 1.0)
-            return Contact.Never;
-        const when = (dy * px - dx * py) / ud;
         return Contact.create(when, this, other);
     }
     repel(other) {
@@ -141,9 +85,11 @@ export class MovingCircle extends MovingObject {
         this.velocity.y -= ny * e;
     }
     repelFixedCircle(other) {
-        const nn = this.radius + other.radius;
-        const nx = (this.position.x - other.center.x) / nn;
-        const ny = (this.position.y - other.center.y) / nn;
+        const dx = this.position.x - other.center.x;
+        const dy = this.position.y - other.center.y;
+        const dd = Math.sqrt(dx * dx + dy * dy);
+        const nx = dx / dd;
+        const ny = dy / dd;
         const e = 2.0 * (nx * this.velocity.x + ny * this.velocity.y);
         this.velocity.x -= nx * e;
         this.velocity.y -= ny * e;
@@ -159,6 +105,12 @@ export class MovingCircle extends MovingObject {
         this.velocity.y -= ny * e;
     }
 }
+export var Outline;
+(function (Outline) {
+    Outline["Both"] = "both";
+    Outline["Positive"] = "positive";
+    Outline["Negative"] = "negative";
+})(Outline || (Outline = {}));
 export class FixedPoint {
     constructor(point) {
         this.point = point;
@@ -170,15 +122,55 @@ export class FixedPoint {
         context.moveTo(this.point.x + radius, this.point.y - radius);
         context.lineTo(this.point.x - radius, this.point.y + radius);
     }
+    predictMovingCircle(other) {
+        const dx = this.point.x - other.position.x;
+        const dy = this.point.y - other.position.y;
+        const vx = other.velocity.x;
+        const vy = other.velocity.y;
+        const vs = vx * vx + vy * vy;
+        const ev = dx * vy - dy * vx;
+        const sq = vs * other.radius * other.radius - ev * ev;
+        if (sq < 0.0)
+            return Contact.Never;
+        const when = -(Math.sqrt(sq) - dy * vy - dx * vx) / vs;
+        return Contact.create(when, other, this);
+    }
 }
 export class FixedCircle {
-    constructor(center, radius) {
+    constructor(center, radius, outline = Outline.Both) {
         this.center = center;
         this.radius = radius;
+        this.outline = outline;
     }
     wireframe(context) {
         context.moveTo(this.center.x + this.radius, this.center.y);
         context.arc(this.center.x, this.center.y, this.radius, 0.0, TAU);
+    }
+    predictMovingCircle(other) {
+        switch (this.outline) {
+            case Outline.Both:
+                return Contact.proximate(this.predictMovingCircleSigned(other, 1), this.predictMovingCircleSigned(other, -1));
+            case Outline.Positive:
+                return this.predictMovingCircleSigned(other, 1);
+            case Outline.Negative:
+                return this.predictMovingCircleSigned(other, -1);
+            default:
+                throw new Error('unknown type');
+        }
+    }
+    predictMovingCircleSigned(other, sign) {
+        const dx = this.center.x - other.position.x;
+        const dy = this.center.y - other.position.y;
+        const rr = other.radius + this.radius * sign;
+        const vx = other.velocity.x;
+        const vy = other.velocity.y;
+        const vs = vx * vx + vy * vy;
+        const ev = dx * vy - dy * vx;
+        const sq = vs * rr * rr - ev * ev;
+        if (sq < 0.0)
+            return Contact.Never;
+        const when = (-Math.sqrt(sq) * sign + dy * vy + dx * vx) / vs;
+        return Contact.create(when, other, this);
     }
 }
 export class FixedLine {
@@ -203,6 +195,21 @@ export class FixedLine {
             context.lineTo(cx + nx * tn, cy + ny * tn);
             context.lineTo(cx + ny * tn, cy - nx * tn);
         }
+    }
+    predictMovingCircle(other) {
+        const dx = this.p1.x - this.p0.x;
+        const dy = this.p1.y - this.p0.y;
+        const ud = other.velocity.y * dx - other.velocity.x * dy;
+        if (this.gate && ud <= 0)
+            return Contact.Never;
+        const dd = Math.sqrt(dx * dx + dy * dy) * Math.sign(ud);
+        const px = (other.position.x - this.p0.x) - dy / dd * other.radius;
+        const py = (other.position.y - this.p0.y) + dx / dd * other.radius;
+        const ua = (other.velocity.y * px - other.velocity.x * py) / ud;
+        if (ua < 0.0 || ua > 1.0)
+            return Contact.Never;
+        const when = (dy * px - dx * py) / ud;
+        return Contact.create(when, other, this);
     }
 }
 //# sourceMappingURL=objects.js.map
