@@ -252,8 +252,8 @@ main canvas {
   position: absolute;
 }
 main p {
-  top: 4px;
-  left: 4px;
+  top: 8px;
+  left: 8px;
   margin: 0;
   padding: 0;
   position: absolute;

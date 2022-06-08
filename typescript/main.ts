@@ -101,7 +101,7 @@ const showProgress = (() => {
 
     // console.log(JSON.stringify(scene.serialize()))
 
-    scene.deserialize(scene.serialize())
+    // scene.deserialize(scene.serialize()) TODO Treat frames
 
     // --- BOOT ENDS ---
     const canvas: HTMLCanvasElement = HTML.query('canvas')
