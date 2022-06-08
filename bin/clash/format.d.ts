@@ -1,8 +1,12 @@
 import { Outline } from "./objects.js";
+import { SceneObject } from "./scene.js";
 export declare type SceneFormat = {
+    gravity: number;
+    damping: number;
     objects: SceneObjectFormat[];
 };
 export declare type SceneObjectFormat = MovingCircleFormat | FixedPointFormat | FixedCircleFormat | FixedLineFormat;
+export declare const decodeSceneObject: (format: SceneObjectFormat) => SceneObject;
 export declare type MovingObjectFormat = {
     mass: number;
     px: number;

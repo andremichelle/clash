@@ -1,3 +1,4 @@
+import { ObservableValue } from "../lib/common.js";
 import { Contact } from "./contact.js";
 import { SceneFormat, SceneObjectFormat } from "./format.js";
 import { MovingCircle, MovingObject } from "./objects.js";
@@ -12,10 +13,12 @@ export declare abstract class SceneObject {
 }
 export declare class Scene {
     private static readonly REMAINING_THRESHOLD;
-    private static readonly MAX_ITERATIONS;
+    private static readonly MAX_STEPS;
     private readonly fixedObjects;
     private readonly movingObjects;
     private readonly testPairs;
+    readonly gravity: ObservableValue<number>;
+    readonly damping: ObservableValue<number>;
     private needsCompile;
     private maxIterations;
     running: boolean;
@@ -26,14 +29,14 @@ export declare class Scene {
     }): void;
     step(remaining: number): void;
     compile(): void;
+    computeForces(): void;
     nextContact(contact: Contact): Contact;
-    applyForces(): void;
     integrate(time: number): void;
     wireframe(context: CanvasRenderingContext2D): void;
     deserialize(format: SceneFormat): void;
     serialize(): SceneFormat;
     numTests: () => number;
     numObjects: () => number;
-    getResetMaxIterations: () => number;
+    getResetMaxSteps: () => number;
     kineticEnergy: () => number;
 }

@@ -2,19 +2,6 @@ import { TAU } from "../lib/math.js";
 import { Contact } from "./contact.js";
 import { SceneObject } from "./scene.js";
 import { Vector } from "./vector.js";
-export const decode = (format) => {
-    switch (format.class) {
-        case 'moving-circle':
-            return new MovingCircle(format.mass, format.px, format.py, format.radius).setVelocity(format.vx, format.vy);
-        case 'fixed-point':
-            return new FixedPoint(new Vector(format.x, format.y));
-        case 'fixed-circle':
-            return new FixedCircle(new Vector(format.x, format.y), format.radius, format.outline, new CircleSegment(format.segment[0], format.segment[1]));
-        case 'fixed-line':
-            return new FixedLine(new Vector(format.x0, format.y0), new Vector(format.x1, format.y1), format.gate);
-    }
-    throw new Error(`Unknown format: ${format}`);
-};
 export class MovingObject extends SceneObject {
     constructor(mass, x = 0.0, y = 0.0) {
         super();
@@ -28,17 +15,6 @@ export class MovingObject extends SceneObject {
         this.velocity.x = x;
         this.velocity.y = y;
         return this;
-    }
-    applyForces() {
-        const gravity = 0.0;
-        this.force.zero();
-        if (this.mass !== Number.POSITIVE_INFINITY) {
-            this.force.y += gravity * this.mass;
-        }
-    }
-    integrate(time) {
-        this.position.addScaled(this.velocity, time);
-        this.velocity.addScaled(this.force, time * this.inverseMass);
     }
 }
 export class MovingCircle extends MovingObject {

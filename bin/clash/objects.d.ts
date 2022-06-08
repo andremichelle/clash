@@ -1,8 +1,7 @@
 import { Contact } from "./contact.js";
-import { FixedCircleFormat, FixedLineFormat, FixedPointFormat, MovingCircleFormat, SceneObjectFormat } from "./format.js";
+import { FixedCircleFormat, FixedLineFormat, FixedPointFormat, MovingCircleFormat } from "./format.js";
 import { SceneObject } from "./scene.js";
 import { Vector } from "./vector.js";
-export declare const decode: (format: SceneObjectFormat) => SceneObject;
 export declare abstract class MovingObject extends SceneObject {
     readonly mass: number;
     readonly inverseMass: number;
@@ -11,8 +10,6 @@ export declare abstract class MovingObject extends SceneObject {
     readonly force: Vector;
     protected constructor(mass: number, x?: number, y?: number);
     setVelocity(x: number, y: number): this;
-    applyForces(): void;
-    integrate(time: number): void;
     abstract wireframe(context: CanvasRenderingContext2D): void;
     abstract proximateMovingCircle(nearest: Contact, other: MovingCircle): NonNullable<Contact>;
     abstract repelMovingCircle(circle: MovingCircle): void;

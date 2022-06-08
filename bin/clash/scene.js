@@ -1,6 +1,7 @@
-import { ArrayUtils } from "../lib/common.js";
+import { ArrayUtils, ObservableValueImpl } from "../lib/common.js";
 import { Contact } from "./contact.js";
-import { decode, FixedLine, MovingCircle, MovingObject } from "./objects.js";
+import { decodeSceneObject } from "./format.js";
+import { FixedLine, MovingCircle, MovingObject } from "./objects.js";
 import { Vector } from "./vector.js";
 export class SceneObject {
     proximate(nearest, object) {
@@ -23,12 +24,14 @@ export class Scene {
         this.fixedObjects = [];
         this.movingObjects = [];
         this.testPairs = [];
+        this.gravity = new ObservableValueImpl(0.0);
+        this.damping = new ObservableValueImpl(0.0);
         this.needsCompile = false;
         this.maxIterations = 0;
         this.running = true;
         this.numTests = () => this.testPairs.length;
         this.numObjects = () => this.movingObjects.length + this.fixedObjects.length;
-        this.getResetMaxIterations = () => {
+        this.getResetMaxSteps = () => {
             const maxIterations = this.maxIterations;
             this.maxIterations = 0;
             return maxIterations;
@@ -69,7 +72,7 @@ export class Scene {
         if (this.needsCompile) {
             this.compile();
         }
-        this.applyForces();
+        this.computeForces();
         let steps = 0;
         while (remaining > Scene.REMAINING_THRESHOLD) {
             const contact = this.nextContact(new Contact(remaining, null, null));
@@ -80,7 +83,7 @@ export class Scene {
             this.integrate(contact.when);
             contact.repel();
             remaining -= contact.when;
-            if (++steps > Scene.MAX_ITERATIONS) {
+            if (++steps > Scene.MAX_STEPS) {
                 console.log(steps, contact);
                 throw new Error('Solving took too long');
             }
@@ -95,38 +98,49 @@ export class Scene {
             .concat(this.fixedObjects.map(other => [movingObject, other])), [])));
         this.needsCompile = false;
     }
+    computeForces() {
+        this.movingObjects.forEach(object => object.force.zero());
+    }
     nextContact(contact) {
         return this.testPairs.reduce((nearest, pair) => pair[1].proximate(nearest, pair[0]), contact);
     }
-    applyForces() {
-        this.movingObjects.forEach(moving => moving.applyForces());
-    }
     integrate(time) {
-        this.movingObjects.forEach(moving => moving.integrate(time));
+        const gravity = this.gravity.get();
+        const dampingScale = Math.pow(1.0 - this.damping.get(), time);
+        this.movingObjects.forEach(object => {
+            object.position.addScaled(object.velocity, time);
+            object.velocity.addScaled(object.force, time * object.inverseMass);
+            object.velocity.y += gravity * time;
+            object.velocity.scale(dampingScale);
+        });
     }
     wireframe(context) {
         context.beginPath();
         this.movingObjects.forEach(object => object.wireframe(context));
-        context.strokeStyle = 'rgb(255, 200, 60)';
-        context.fillStyle = 'black';
+        context.strokeStyle = null;
+        context.fillStyle = '#BDC2AD';
         context.stroke();
         context.fill();
         context.beginPath();
         this.fixedObjects.forEach(object => object.wireframe(context));
-        context.strokeStyle = 'grey';
+        context.strokeStyle = '#F9D253';
         context.stroke();
     }
     deserialize(format) {
         ArrayUtils.clear(this.movingObjects);
         ArrayUtils.clear(this.fixedObjects);
-        this.addComposite({ objects: format.objects.map(f => decode(f)) });
+        this.addComposite({ objects: format.objects.map(f => decodeSceneObject(f)) });
+        this.gravity.set(format.gravity);
+        this.damping.set(format.damping);
     }
     serialize() {
         return {
+            gravity: this.gravity.get(),
+            damping: this.damping.get(),
             objects: [...this.movingObjects, ...this.fixedObjects].map(o => o.serialize())
         };
     }
 }
 Scene.REMAINING_THRESHOLD = 1e-7;
-Scene.MAX_ITERATIONS = 10000;
+Scene.MAX_STEPS = 10000;
 //# sourceMappingURL=scene.js.map

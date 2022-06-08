@@ -18,7 +18,7 @@ Make sure to have typescript installed and run in the console:
 
 # Todo
 
-* Introduce gravity and resistance
+* ~~Introduce gravity and resistance~~
 * Find solution for resting contacts (prevent permanent jumping)
 * Introduce moving particles
 * ~~Introduce **fixed** polygons, circles, and circle segments~~

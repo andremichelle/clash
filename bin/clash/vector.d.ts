@@ -3,7 +3,7 @@ export declare class Vector {
     y: number;
     static subtract(a: Vector, b: Vector): Vector;
     static normalized(v: Vector): Vector;
-    constructor(x?: number, y?: number);
+    constructor(x: number, y: number);
     zero(): void;
     add(other: Vector): void;
     addScaled(other: Vector, scale: number): void;
