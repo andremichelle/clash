@@ -4,10 +4,12 @@ import {SceneObject} from "./scene.js"
 export class Contact {
     static readonly MIN_TIME_THRESHOLD = -.015625 // fixing tiny overshoots
 
-    static Never = new Contact(Number.POSITIVE_INFINITY, null, null)
+    static readonly Never = new Contact(Number.POSITIVE_INFINITY, null, null)
 
-    static create(when: number, object: MovingObject, other: SceneObject) {
-        return when >= Contact.MIN_TIME_THRESHOLD ? new Contact(when, object, other) : Contact.Never
+    static instanceCount: number = 0
+
+    static compare(closest: Contact, when: number, object: MovingObject, other: SceneObject) {
+        return when >= Contact.MIN_TIME_THRESHOLD && when < closest.when ? new Contact(when, object, other) : closest
     }
 
     static proximate(current: Contact, other: Contact): Contact {
@@ -20,6 +22,7 @@ export class Contact {
     constructor(readonly when: number,
                 readonly moving: MovingObject,
                 readonly other: SceneObject) {
+        Contact.instanceCount++
     }
 
     repel(): void {

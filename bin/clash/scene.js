@@ -2,9 +2,9 @@ import { Contact } from "./contact.js";
 import { FixedLine, MovingCircle, MovingObject } from "./objects.js";
 import { Vector } from "./vector.js";
 export class SceneObject {
-    predictMovingObject(object) {
+    proximate(closest, object) {
         if (object instanceof MovingCircle) {
-            return this.predictMovingCircle(object);
+            return this.proximateMovingCircle(closest, object);
         }
         throw new Error(`Unknown MovingObject(${object.constructor.name})`);
     }
@@ -65,7 +65,7 @@ export class Scene {
         this.applyForces();
         let steps = 0;
         while (remaining > Scene.REMAINING_THRESHOLD) {
-            const contact = this.nextContact();
+            const contact = this.nextContact(new Contact(remaining, null, null));
             if (contact.when >= remaining) {
                 this.integrate(remaining);
                 break;
@@ -87,8 +87,8 @@ export class Scene {
             .concat(this.fixedObjects.map(other => [movingObject, other])), [])));
         this.needsCompile = false;
     }
-    nextContact() {
-        return this.testPairs.reduce((nearest, pair) => Contact.proximate(nearest, pair[1].predictMovingObject(pair[0])), Contact.Never);
+    nextContact(contact) {
+        return this.testPairs.reduce((nearest, pair) => pair[1].proximate(nearest, pair[0]), contact);
     }
     applyForces() {
         this.movingObjects.forEach(moving => moving.applyForces());

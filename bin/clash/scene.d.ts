@@ -2,10 +2,10 @@ import { Contact } from "./contact.js";
 import { MovingCircle, MovingObject } from "./objects.js";
 import { Vector } from "./vector.js";
 export declare abstract class SceneObject {
-    predictMovingObject(object: MovingObject): NonNullable<Contact>;
+    proximate(closest: Contact, object: MovingObject): NonNullable<Contact>;
     repelMovingObject(object: MovingObject): void;
     abstract wireframe(context: CanvasRenderingContext2D): void;
-    abstract predictMovingCircle(circle: MovingCircle): NonNullable<Contact>;
+    abstract proximateMovingCircle(closest: Contact, circle: MovingCircle): NonNullable<Contact>;
     abstract repelMovingCircle(circle: MovingCircle): void;
 }
 export declare class Scene {
@@ -23,7 +23,7 @@ export declare class Scene {
     }): void;
     step(remaining: number): void;
     compile(): void;
-    nextContact(): Contact;
+    nextContact(contact: Contact): Contact;
     applyForces(): void;
     integrate(time: number): void;
     wireframe(context: CanvasRenderingContext2D): void;

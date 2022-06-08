@@ -3,9 +3,10 @@ export class Contact {
         this.when = when;
         this.moving = moving;
         this.other = other;
+        Contact.instanceCount++;
     }
-    static create(when, object, other) {
-        return when >= Contact.MIN_TIME_THRESHOLD ? new Contact(when, object, other) : Contact.Never;
+    static compare(closest, when, object, other) {
+        return when >= Contact.MIN_TIME_THRESHOLD && when < closest.when ? new Contact(when, object, other) : closest;
     }
     static proximate(current, other) {
         return other === Contact.Never
@@ -19,4 +20,5 @@ export class Contact {
 }
 Contact.MIN_TIME_THRESHOLD = -.015625;
 Contact.Never = new Contact(Number.POSITIVE_INFINITY, null, null);
+Contact.instanceCount = 0;
 //# sourceMappingURL=contact.js.map

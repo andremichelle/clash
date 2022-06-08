@@ -32,7 +32,7 @@ export class MovingCircle extends MovingObject {
         context.moveTo(this.position.x + this.radius, this.position.y);
         context.arc(this.position.x, this.position.y, this.radius, 0.0, TAU);
     }
-    predictMovingCircle(other) {
+    proximateMovingCircle(closest, other) {
         const vx = other.velocity.x - this.velocity.x;
         const vy = other.velocity.y - this.velocity.y;
         const vs = vx * vx + vy * vy;
@@ -42,9 +42,9 @@ export class MovingCircle extends MovingObject {
         const rr = this.radius + other.radius;
         const sq = vs * rr * rr - ev * ev;
         if (sq < 0.0)
-            return Contact.Never;
+            return closest;
         const when = -(Math.sqrt(sq) - ey * vy - ex * vx) / vs;
-        return Contact.create(when, this, other);
+        return Contact.compare(closest, when, this, other);
     }
     repelMovingCircle(other) {
         const distance = this.radius + other.radius;
@@ -60,19 +60,6 @@ export class MovingCircle extends MovingObject {
         other.velocity.y += ey * other.inverseMass;
     }
 }
-export var Outline;
-(function (Outline) {
-    Outline["Both"] = "both";
-    Outline["Positive"] = "positive";
-    Outline["Negative"] = "negative";
-})(Outline || (Outline = {}));
-export class Segment {
-    constructor(angleMin, angleRange) {
-        this.angleMin = angleMin;
-        this.angleRange = angleRange;
-    }
-}
-Segment.Full = new Segment(0.0, TAU);
 export class FixedPoint extends SceneObject {
     constructor(point) {
         super();
@@ -85,7 +72,7 @@ export class FixedPoint extends SceneObject {
         context.moveTo(this.point.x + radius, this.point.y - radius);
         context.lineTo(this.point.x - radius, this.point.y + radius);
     }
-    predictMovingCircle(circle) {
+    proximateMovingCircle(closest, circle) {
         const dx = this.point.x - circle.position.x;
         const dy = this.point.y - circle.position.y;
         const vx = circle.velocity.x;
@@ -94,9 +81,8 @@ export class FixedPoint extends SceneObject {
         const ev = dx * vy - dy * vx;
         const sq = vs * circle.radius * circle.radius - ev * ev;
         if (sq < 0.0)
-            return Contact.Never;
-        const when = -(Math.sqrt(sq) - dy * vy - dx * vx) / vs;
-        return Contact.create(when, circle, this);
+            return closest;
+        return Contact.compare(closest, -(Math.sqrt(sq) - dy * vy - dx * vx) / vs, circle, this);
     }
     repelMovingCircle(circle) {
         const nx = (circle.position.x - this.point.x) / circle.radius;
@@ -106,8 +92,21 @@ export class FixedPoint extends SceneObject {
         circle.velocity.y -= ny * e;
     }
 }
+export var Outline;
+(function (Outline) {
+    Outline["Both"] = "both";
+    Outline["Positive"] = "positive";
+    Outline["Negative"] = "negative";
+})(Outline || (Outline = {}));
+export class CircleSegment {
+    constructor(angleMin, angleRange) {
+        this.angleMin = angleMin;
+        this.angleRange = angleRange;
+    }
+}
+CircleSegment.Full = new CircleSegment(0.0, TAU);
 export class FixedCircle extends SceneObject {
-    constructor(center, radius, outline = Outline.Both, segment = Segment.Full) {
+    constructor(center, radius, outline = Outline.Both, segment = CircleSegment.Full) {
         super();
         this.center = center;
         this.radius = radius;
@@ -115,7 +114,7 @@ export class FixedCircle extends SceneObject {
         this.segment = segment;
     }
     wireframe(context) {
-        if (this.segment === Segment.Full) {
+        if (this.segment === CircleSegment.Full) {
             context.moveTo(this.center.x + this.radius, this.center.y);
             context.arc(this.center.x, this.center.y, this.radius, 0.0, TAU);
         }
@@ -124,19 +123,19 @@ export class FixedCircle extends SceneObject {
             context.arc(this.center.x, this.center.y, this.radius, this.segment.angleMin, this.segment.angleMin + this.segment.angleRange);
         }
     }
-    predictMovingCircle(circle) {
+    proximateMovingCircle(closest, circle) {
         switch (this.outline) {
             case Outline.Both:
-                return Contact.proximate(this.predictMovingCircleSigned(circle, 1), this.predictMovingCircleSigned(circle, -1));
+                return Contact.proximate(this.proximateMovingCircleSigned(closest, circle, 1), this.proximateMovingCircleSigned(closest, circle, -1));
             case Outline.Positive:
-                return this.predictMovingCircleSigned(circle, 1);
+                return this.proximateMovingCircleSigned(closest, circle, 1);
             case Outline.Negative:
-                return this.predictMovingCircleSigned(circle, -1);
+                return this.proximateMovingCircleSigned(closest, circle, -1);
             default:
                 throw new Error('unknown type');
         }
     }
-    predictMovingCircleSigned(circle, sign) {
+    proximateMovingCircleSigned(closest, circle, sign) {
         const dx = this.center.x - circle.position.x;
         const dy = this.center.y - circle.position.y;
         const rr = circle.radius + this.radius * sign;
@@ -146,10 +145,10 @@ export class FixedCircle extends SceneObject {
         const ev = dx * vy - dy * vx;
         const sq = vs * rr * rr - ev * ev;
         if (sq < 0.0)
-            return Contact.Never;
+            return closest;
         const when = (-Math.sqrt(sq) * sign + dy * vy + dx * vx) / vs;
-        if (this.segment === Segment.Full) {
-            return Contact.create(when, circle, this);
+        if (this.segment === CircleSegment.Full) {
+            return Contact.compare(closest, when, circle, this);
         }
         const px = circle.position.x + circle.velocity.x * when - this.center.x;
         const py = circle.position.y + circle.velocity.y * when - this.center.y;
@@ -157,9 +156,9 @@ export class FixedCircle extends SceneObject {
         while (angle < 0.0)
             angle += TAU;
         if (angle >= this.segment.angleRange) {
-            return Contact.Never;
+            return closest;
         }
-        return Contact.create(when, circle, this);
+        return Contact.compare(closest, when, circle, this);
     }
     repelMovingCircle(circle) {
         const dx = circle.position.x - this.center.x;
@@ -196,20 +195,19 @@ export class FixedLine extends SceneObject {
             context.lineTo(cx + ny * tn, cy - nx * tn);
         }
     }
-    predictMovingCircle(circle) {
+    proximateMovingCircle(closest, circle) {
         const dx = this.p1.x - this.p0.x;
         const dy = this.p1.y - this.p0.y;
         const ud = circle.velocity.y * dx - circle.velocity.x * dy;
         if (this.gate && ud <= 0)
-            return Contact.Never;
+            return closest;
         const dd = Math.sqrt(dx * dx + dy * dy) * Math.sign(ud);
         const px = (circle.position.x - this.p0.x) - dy / dd * circle.radius;
         const py = (circle.position.y - this.p0.y) + dx / dd * circle.radius;
         const ua = (circle.velocity.y * px - circle.velocity.x * py) / ud;
         if (ua < 0.0 || ua > 1.0)
-            return Contact.Never;
-        const when = (dy * px - dx * py) / ud;
-        return Contact.create(when, circle, this);
+            return closest;
+        return Contact.compare(closest, (dy * px - dx * py) / ud, circle, this);
     }
     repelMovingCircle(circle) {
         const dx = this.p1.x - this.p0.x;

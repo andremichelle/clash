@@ -97,7 +97,7 @@ const showProgress = (() => {
             scene.add(moving, fixed)
         }
     ]
-    Scenes[4]()
+    Scenes[0]()
 
     // --- BOOT ENDS ---
     const canvas: HTMLCanvasElement = HTML.query('canvas')

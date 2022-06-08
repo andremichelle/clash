@@ -5,8 +5,9 @@ export declare class Contact {
     readonly moving: MovingObject;
     readonly other: SceneObject;
     static readonly MIN_TIME_THRESHOLD = -0.015625;
-    static Never: Contact;
-    static create(when: number, object: MovingObject, other: SceneObject): Contact;
+    static readonly Never: Contact;
+    static instanceCount: number;
+    static compare(closest: Contact, when: number, object: MovingObject, other: SceneObject): Contact;
     static proximate(current: Contact, other: Contact): Contact;
     constructor(when: number, moving: MovingObject, other: SceneObject);
     repel(): void;
