@@ -8,7 +8,7 @@ export class Vector {
         return length > 0.0 ? new Vector(v.x / length, v.y / length) : v.clone()
     }
 
-    constructor(public x: number = 0.0, public y: number = 0.0) {
+    constructor(public x: number, public y: number) {
     }
 
     zero(): void {

@@ -110,10 +110,13 @@ const showProgress = (() => {
     const labelMaxSteps: HTMLCanvasElement = HTML.query('#max-steps')
     const labelNumObject: HTMLCanvasElement = HTML.query('#num-objects')
     const context: CanvasRenderingContext2D = canvas.getContext('2d')
-    setInterval(() => labelMaxSteps.textContent = `${scene.getResetMaxIterations()}`, 1000)
+    setInterval(() => labelMaxSteps.textContent = `${scene.getResetMaxSteps()}`, 1000)
     const nextFrame = () => {
-        scene.step(1000.0 / 60.0) // assume steady 60fps
+        // scene.step(1000.0 / 60.0) // assume steady 60fps
         // scene.step(1)
+        for (let i = 0; i < 1; i++) {
+            scene.step(1000.0 / 60.0)
+        }
         labelTotalEnergy.textContent = scene.kineticEnergy().toFixed(10)
         labelNumTests.textContent = `${scene.numTests()}`
         labelNumObject.textContent = `${scene.numObjects()}`
