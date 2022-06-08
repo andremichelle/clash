@@ -17,6 +17,7 @@ export declare class Scene {
     private readonly movingObjects;
     private readonly testPairs;
     private needsCompile;
+    private maxIterations;
     running: boolean;
     frame(xMin: number, yMin: number, xMax: number, yMax: number): Vector[];
     add(...objects: SceneObject[]): void;
@@ -32,5 +33,6 @@ export declare class Scene {
     serialize(): SceneFormat;
     numTests: () => number;
     numObjects: () => number;
+    getResetMaxIterations: () => number;
     kineticEnergy: () => number;
 }

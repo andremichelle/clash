@@ -23,9 +23,15 @@ export class Scene {
         this.movingObjects = [];
         this.testPairs = [];
         this.needsCompile = false;
+        this.maxIterations = 0;
         this.running = true;
         this.numTests = () => this.testPairs.length;
         this.numObjects = () => this.movingObjects.length + this.fixedObjects.length;
+        this.getResetMaxIterations = () => {
+            const maxIterations = this.maxIterations;
+            this.maxIterations = 0;
+            return maxIterations;
+        };
         this.kineticEnergy = () => this.movingObjects.reduce((energy, object) => {
             const squared = object.velocity.dot();
             return squared === 0.0 || object.inverseMass === 0.0 ? energy : energy + squared * object.mass;
@@ -77,6 +83,7 @@ export class Scene {
                 console.log(steps, contact);
                 throw new Error('Solving took too long');
             }
+            this.maxIterations = Math.max(this.maxIterations, steps);
         }
     }
     compile() {

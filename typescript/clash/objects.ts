@@ -141,7 +141,7 @@ export class CircleSegment {
     static Full = new CircleSegment(0.0, TAU)
 
     constructor(readonly angleMin: number, readonly angleRange: number) {
-        console.assert(0.0 < angleMin && angleMin < TAU && 0.0 < angleRange && angleRange < TAU)
+        console.assert(0.0 <= angleMin && angleMin < TAU && 0.0 < angleRange && angleRange <= TAU)
     }
 }
 

@@ -120,7 +120,7 @@ export class CircleSegment {
     constructor(angleMin, angleRange) {
         this.angleMin = angleMin;
         this.angleRange = angleRange;
-        console.assert(0.0 < angleMin && angleMin < TAU && 0.0 < angleRange && angleRange < TAU);
+        console.assert(0.0 <= angleMin && angleMin < TAU && 0.0 < angleRange && angleRange <= TAU);
     }
 }
 CircleSegment.Full = new CircleSegment(0.0, TAU);

@@ -37,6 +37,7 @@ export class Scene {
     private readonly testPairs: [MovingObject, SceneObject][] = []
 
     private needsCompile: boolean = false
+    private maxIterations: number = 0
 
     running: boolean = true
 
@@ -88,6 +89,7 @@ export class Scene {
                 console.log(steps, contact)
                 throw new Error('Solving took too long')
             }
+            this.maxIterations = Math.max(this.maxIterations, steps)
         }
     }
 
@@ -135,6 +137,12 @@ export class Scene {
     numTests = (): number => this.testPairs.length
 
     numObjects = (): number => this.movingObjects.length + this.fixedObjects.length
+
+    getResetMaxIterations = (): number => {
+        const maxIterations = this.maxIterations
+        this.maxIterations = 0
+        return maxIterations
+    }
 
     kineticEnergy = (): number => this.movingObjects.reduce((energy: number, object: MovingObject) => {
         const squared = object.velocity.dot()

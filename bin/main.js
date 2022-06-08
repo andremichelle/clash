@@ -32,10 +32,10 @@ const showProgress = (() => {
     const Scenes = [
         () => {
             for (let i = 0; i < 100; i++) {
-                const radius = random.nextDouble(4.0, 32.0);
+                const radius = random.nextInt(4.0, 32.0);
                 const mass = radius * radius;
-                const x = random.nextDouble(radius, window.innerWidth - radius);
-                const y = random.nextDouble(radius, window.innerHeight - radius);
+                const x = random.nextInt(radius, window.innerWidth - radius);
+                const y = random.nextInt(radius, window.innerHeight - radius);
                 const object = new MovingCircle(mass, x, y, radius);
                 object.velocity.x = random.nextDouble(-0.25, 0.25);
                 object.velocity.y = random.nextDouble(-0.25, 0.25);
@@ -88,12 +88,13 @@ const showProgress = (() => {
         }
     ];
     Scenes[0]();
-    console.log(JSON.stringify(scene.serialize()));
     const canvas = HTML.query('canvas');
     const labelTotalEnergy = HTML.query('#total-energy');
     const labelNumTests = HTML.query('#num-tests');
+    const labelMaxSteps = HTML.query('#max-steps');
     const labelNumObject = HTML.query('#num-objects');
     const context = canvas.getContext('2d');
+    setInterval(() => labelMaxSteps.textContent = `${scene.getResetMaxIterations()}`, 1000);
     const nextFrame = () => {
         scene.step(1000.0 / 60.0);
         labelTotalEnergy.textContent = scene.kineticEnergy().toFixed(10);
