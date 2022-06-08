@@ -8,8 +8,8 @@ export class Contact {
 
     static instanceCount: number = 0
 
-    static compare(closest: Contact, when: number, object: MovingObject, other: SceneObject) {
-        return when >= Contact.MIN_TIME_THRESHOLD && when < closest.when ? new Contact(when, object, other) : closest
+    static compare(nearest: Contact, when: number, object: MovingObject, other: SceneObject) {
+        return when >= Contact.MIN_TIME_THRESHOLD && when < nearest.when ? new Contact(when, object, other) : nearest
     }
 
     static proximate(current: Contact, other: Contact): Contact {

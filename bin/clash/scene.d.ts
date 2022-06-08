@@ -2,10 +2,10 @@ import { Contact } from "./contact.js";
 import { MovingCircle, MovingObject } from "./objects.js";
 import { Vector } from "./vector.js";
 export declare abstract class SceneObject {
-    proximate(closest: Contact, object: MovingObject): NonNullable<Contact>;
+    proximate(nearest: Contact, object: MovingObject): NonNullable<Contact>;
     repelMovingObject(object: MovingObject): void;
     abstract wireframe(context: CanvasRenderingContext2D): void;
-    abstract proximateMovingCircle(closest: Contact, circle: MovingCircle): NonNullable<Contact>;
+    abstract proximateMovingCircle(nearest: Contact, circle: MovingCircle): NonNullable<Contact>;
     abstract repelMovingCircle(circle: MovingCircle): void;
 }
 export declare class Scene {

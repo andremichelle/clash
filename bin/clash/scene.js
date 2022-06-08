@@ -2,9 +2,9 @@ import { Contact } from "./contact.js";
 import { FixedLine, MovingCircle, MovingObject } from "./objects.js";
 import { Vector } from "./vector.js";
 export class SceneObject {
-    proximate(closest, object) {
+    proximate(nearest, object) {
         if (object instanceof MovingCircle) {
-            return this.proximateMovingCircle(closest, object);
+            return this.proximateMovingCircle(nearest, object);
         }
         throw new Error(`Unknown MovingObject(${object.constructor.name})`);
     }

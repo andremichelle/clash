@@ -18,7 +18,7 @@ export abstract class MovingObject extends SceneObject {
     }
 
     applyForces(): void {
-        const gravity = 0.0//02
+        const gravity = 0.0//1
 
         this.force.zero()
         if (this.mass !== Number.POSITIVE_INFINITY) {
@@ -29,12 +29,12 @@ export abstract class MovingObject extends SceneObject {
     integrate(time: number): void {
         this.position.addScaled(this.velocity, time)
         this.velocity.addScaled(this.force, time * this.inverseMass)
-        // this.velocity.scale(Math.pow(0.997, time))
+        // this.velocity.scale(Math.pow(0.995, time))
     }
 
     abstract wireframe(context: CanvasRenderingContext2D): void
 
-    abstract proximateMovingCircle(closest: Contact, other: MovingCircle): NonNullable<Contact>
+    abstract proximateMovingCircle(nearest: Contact, other: MovingCircle): NonNullable<Contact>
 
     abstract repelMovingCircle(circle: MovingCircle): void
 }
@@ -49,7 +49,7 @@ export class MovingCircle extends MovingObject {
         context.arc(this.position.x, this.position.y, this.radius, 0.0, TAU)
     }
 
-    proximateMovingCircle(closest: Contact, other: MovingCircle): NonNullable<Contact> {
+    proximateMovingCircle(nearest: Contact, other: MovingCircle): NonNullable<Contact> {
         const vx = other.velocity.x - this.velocity.x
         const vy = other.velocity.y - this.velocity.y
         const vs = vx * vx + vy * vy
@@ -58,9 +58,9 @@ export class MovingCircle extends MovingObject {
         const ev = ex * vy - ey * vx
         const rr = this.radius + other.radius
         const sq = vs * rr * rr - ev * ev
-        if (sq < 0.0) return closest
+        if (sq < 0.0) return nearest
         const when = -(Math.sqrt(sq) - ey * vy - ex * vx) / vs
-        return Contact.compare(closest, when, this, other)
+        return Contact.compare(nearest, when, this, other)
     }
 
     repelMovingCircle(other: MovingCircle): void {
@@ -91,7 +91,7 @@ export class FixedPoint extends SceneObject {
         context.lineTo(this.point.x - radius, this.point.y + radius)
     }
 
-    proximateMovingCircle(closest: Contact, circle: MovingCircle): NonNullable<Contact> {
+    proximateMovingCircle(nearest: Contact, circle: MovingCircle): NonNullable<Contact> {
         const dx = this.point.x - circle.position.x
         const dy = this.point.y - circle.position.y
         const vx = circle.velocity.x
@@ -99,8 +99,8 @@ export class FixedPoint extends SceneObject {
         const vs = vx * vx + vy * vy
         const ev = dx * vy - dy * vx
         const sq = vs * circle.radius * circle.radius - ev * ev
-        if (sq < 0.0) return closest
-        return Contact.compare(closest, -(Math.sqrt(sq) - dy * vy - dx * vx) / vs, circle, this)
+        if (sq < 0.0) return nearest
+        return Contact.compare(nearest, -(Math.sqrt(sq) - dy * vy - dx * vx) / vs, circle, this)
     }
 
     repelMovingCircle(circle: MovingCircle): void {
@@ -141,22 +141,22 @@ export class FixedCircle extends SceneObject {
         }
     }
 
-    proximateMovingCircle(closest: Contact, circle: MovingCircle): NonNullable<Contact> {
+    proximateMovingCircle(nearest: Contact, circle: MovingCircle): NonNullable<Contact> {
         switch (this.outline) {
             case Outline.Both:
                 return Contact.proximate(
-                    this.proximateMovingCircleSigned(closest, circle, 1),
-                    this.proximateMovingCircleSigned(closest, circle, -1))
+                    this.proximateMovingCircleSigned(nearest, circle, 1),
+                    this.proximateMovingCircleSigned(nearest, circle, -1))
             case Outline.Positive:
-                return this.proximateMovingCircleSigned(closest, circle, 1)
+                return this.proximateMovingCircleSigned(nearest, circle, 1)
             case Outline.Negative:
-                return this.proximateMovingCircleSigned(closest, circle, -1)
+                return this.proximateMovingCircleSigned(nearest, circle, -1)
             default:
                 throw new Error('unknown type')
         }
     }
 
-    proximateMovingCircleSigned(closest: Contact, circle: MovingCircle, sign: number): NonNullable<Contact> {
+    proximateMovingCircleSigned(nearest: Contact, circle: MovingCircle, sign: number): NonNullable<Contact> {
         const dx = this.center.x - circle.position.x
         const dy = this.center.y - circle.position.y
         const rr = circle.radius + this.radius * sign
@@ -165,19 +165,19 @@ export class FixedCircle extends SceneObject {
         const vs = vx * vx + vy * vy
         const ev = dx * vy - dy * vx
         const sq = vs * rr * rr - ev * ev
-        if (sq < 0.0) return closest
+        if (sq < 0.0) return nearest
         const when = (-Math.sqrt(sq) * sign + dy * vy + dx * vx) / vs
         if (this.segment === CircleSegment.Full) {
-            return Contact.compare(closest, when, circle, this)
+            return Contact.compare(nearest, when, circle, this)
         }
         const px = circle.position.x + circle.velocity.x * when - this.center.x
         const py = circle.position.y + circle.velocity.y * when - this.center.y
         let angle = Math.atan2(py, px) - this.segment.angleMin
         while (angle < 0.0) angle += TAU
         if (angle >= this.segment.angleRange) {
-            return closest
+            return nearest
         }
-        return Contact.compare(closest, when, circle, this)
+        return Contact.compare(nearest, when, circle, this)
     }
 
     repelMovingCircle(circle: MovingCircle): void {
@@ -217,17 +217,17 @@ export class FixedLine extends SceneObject {
         }
     }
 
-    proximateMovingCircle(closest: Contact, circle: MovingCircle): NonNullable<Contact> {
+    proximateMovingCircle(nearest: Contact, circle: MovingCircle): NonNullable<Contact> {
         const dx = this.p1.x - this.p0.x
         const dy = this.p1.y - this.p0.y
         const ud = circle.velocity.y * dx - circle.velocity.x * dy
-        if (this.gate && ud <= 0) return closest
+        if (this.gate && ud <= 0) return nearest
         const dd = Math.sqrt(dx * dx + dy * dy) * Math.sign(ud)
         const px = (circle.position.x - this.p0.x) - dy / dd * circle.radius
         const py = (circle.position.y - this.p0.y) + dx / dd * circle.radius
         const ua = (circle.velocity.y * px - circle.velocity.x * py) / ud
-        if (ua < 0.0 || ua > 1.0) return closest
-        return Contact.compare(closest, (dy * px - dx * py) / ud, circle, this)
+        if (ua < 0.0 || ua > 1.0) return nearest
+        return Contact.compare(nearest, (dy * px - dx * py) / ud, circle, this)
     }
 
     repelMovingCircle(circle: MovingCircle): void {

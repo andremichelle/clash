@@ -3,9 +3,9 @@ import {FixedLine, MovingCircle, MovingObject} from "./objects.js"
 import {Vector} from "./vector.js"
 
 export abstract class SceneObject {
-    proximate(closest: Contact, object: MovingObject): NonNullable<Contact> {
+    proximate(nearest: Contact, object: MovingObject): NonNullable<Contact> {
         if (object instanceof MovingCircle) {
-            return this.proximateMovingCircle(closest, object)
+            return this.proximateMovingCircle(nearest, object)
         }
         throw new Error(`Unknown MovingObject(${object.constructor.name})`)
     }
@@ -20,7 +20,7 @@ export abstract class SceneObject {
 
     abstract wireframe(context: CanvasRenderingContext2D): void
 
-    abstract proximateMovingCircle(closest: Contact, circle: MovingCircle): NonNullable<Contact>
+    abstract proximateMovingCircle(nearest: Contact, circle: MovingCircle): NonNullable<Contact>
 
     abstract repelMovingCircle(circle: MovingCircle): void
 }
